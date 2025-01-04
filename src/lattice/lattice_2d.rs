@@ -48,12 +48,12 @@ impl<const N: usize> Lattice for Lattice2D<N> {
     }
 
     fn magnetization(&self) -> (f64, f64) {
-        let (mut rcos, mut rsin) = (0.0, 0.0);
+        let (mut cos, mut sin) = (0.0, 0.0);
         for (col, row) in (0..(N * N)).map(crate::utils::div_rem::<N>) {
-            rcos += f64::cos(self.spins[col][row]);
-            rsin += f64::sin(self.spins[col][row]);
+            cos += f64::cos(self.spins[col][row]);
+            sin += f64::sin(self.spins[col][row]);
         }
-        (rcos, rsin)
+        (cos, sin)
     }
 
     fn magnetization_diff(&self, i: usize, angle: f64) -> (f64, f64) {
