@@ -12,7 +12,10 @@ pub struct Energy<const N: usize> {
 
 impl<const N: usize> Energy<N> {
     pub fn new(energy: f64) -> Self {
-        Self { value: energy, squared: energy.powi(2) }
+        Self {
+            value: energy,
+            squared: energy.powi(2),
+        }
     }
 }
 

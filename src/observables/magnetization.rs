@@ -12,7 +12,10 @@ pub struct Magnetization<const N: usize> {
 
 impl<const N: usize> Magnetization<N> {
     pub fn new((cos, sin): (f64, f64)) -> Self {
-        Self { value: f64::sqrt(cos*cos + sin*sin), squared: cos*cos + sin*sin }
+        Self {
+            value: f64::sqrt(cos * cos + sin * sin),
+            squared: cos * cos + sin * sin,
+        }
     }
 }
 

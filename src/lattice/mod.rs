@@ -7,11 +7,6 @@ pub trait Lattice {
     fn update_angle(&mut self, i: usize, angle: f64);
 
     /**
-     * Returns the number of spins in the lattice.
-     */
-    fn num_sites(&self) -> usize;
-
-    /**
      * Calculates the total energy of the lattice.
      */
     fn energy(&self) -> f64;

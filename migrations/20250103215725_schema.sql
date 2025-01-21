@@ -12,6 +12,10 @@ CREATE TABLE IF NOT EXISTS "configurations" (
     size                INTEGER     NOT NULL,
     temperature         REAL        NOT NULL,
 
+    energy              REAL        NOT NULL,
+    energy_std          REAL        NOT NULL,
+    energy_tau          REAL        NOT NULL,
+
     CONSTRAINT "PK.Configurations_ID" PRIMARY KEY (id),
     CONSTRAINT "FK.Configurations_RunID" FOREIGN KEY (run_id) REFERENCES "runs" (id)
 );
