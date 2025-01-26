@@ -1,5 +1,5 @@
 use crate::lattice::Lattice;
-use wide::{f64x4, f64x2};
+use wide::{f64x2, f64x4};
 
 pub struct Lattice2D<const N: usize> {
     beta: f64,
@@ -63,11 +63,20 @@ impl<const N: usize> Lattice for Lattice2D<N> {
 
     fn magnetization_diff(&self, i: usize, angle: f64) -> (f64, f64) {
         let (col, row) = (i / N, i % N);
-        let (sin, cos) = f64x2::from([angle, std::f64::consts::PI + self.spins[col][row]]).sin_cos();
+        let (sin, cos) =
+            f64x2::from([angle, std::f64::consts::PI + self.spins[col][row]]).sin_cos();
         (cos.reduce_add(), sin.reduce_add())
     }
 
     fn acceptance(&self, diff_energy: f64) -> f64 {
         f64::min(1.0, f64::exp(-self.beta * diff_energy))
+    }
+
+    fn normalize_per_spin(value: f64) -> f64 {
+        value / N.pow(2) as f64
+    }
+
+    fn specific_heat_per_spin(e: f64, e_sqr: f64, temperature: f64) -> f64 {
+        (e_sqr - e.powi(2)) / temperature.powi(2)
     }
 }

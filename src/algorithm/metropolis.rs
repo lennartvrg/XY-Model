@@ -2,19 +2,11 @@ use rand::Rng;
 
 use crate::lattice::lattice_2d::Lattice2D;
 use crate::lattice::Lattice;
-use crate::observables::{Energy, EnergyObservable, Magnetization, MagnetizationObservable};
 
 pub trait Metropolis {
     fn sweep(&mut self, rng: &mut impl Rng) -> (f64, (f64, f64));
 
-    fn metropolis_hastings(
-        &mut self,
-        rng: &mut impl Rng,
-        num_sweeps: usize,
-    ) -> (
-        Vec<impl EnergyObservable>,
-        Vec<impl MagnetizationObservable>,
-    );
+    fn metropolis_hastings(&mut self, rng: &mut impl Rng, sweeps: usize) -> (Vec<f64>, Vec<f64>);
 }
 
 impl<const N: usize> Metropolis for Lattice2D<N> {
@@ -37,23 +29,21 @@ impl<const N: usize> Metropolis for Lattice2D<N> {
         (chg_energy, (chg_magnetization_cos, chg_magnetization_sin))
     }
 
-    fn metropolis_hastings(
-        &mut self,
-        rng: &mut impl Rng,
-        num_sweeps: usize,
-    ) -> (Vec<Energy<N>>, Vec<Magnetization<N>>) {
-        let mut energies = Vec::<Energy<N>>::with_capacity(num_sweeps);
-        let mut magnetizations = Vec::<Magnetization<N>>::with_capacity(num_sweeps);
+    fn metropolis_hastings(&mut self, rng: &mut impl Rng, sweeps: usize) -> (Vec<f64>, Vec<f64>) {
+        let mut energies = Vec::<f64>::with_capacity(sweeps);
+        let mut magnetizations = Vec::<f64>::with_capacity(sweeps);
 
         let (mut cur_energy, mut cur_magnetization) = (self.energy(), self.magnetization());
-        for _ in 0..num_sweeps {
+        for _ in 0..sweeps {
             let (chg_energy, chg_magnetization) = self.sweep(rng);
             cur_energy += chg_energy;
             cur_magnetization.0 += chg_magnetization.0;
             cur_magnetization.1 += chg_magnetization.1;
 
-            energies.push(Energy::new(cur_energy));
-            magnetizations.push(Magnetization::new(cur_magnetization));
+            energies.push(Self::normalize_per_spin(cur_energy));
+            magnetizations.push(Self::normalize_per_spin(f64::sqrt(
+                cur_magnetization.0.powi(2) + cur_magnetization.1.powi(2),
+            )));
         }
 
         (energies, magnetizations)

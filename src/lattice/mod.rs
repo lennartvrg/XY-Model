@@ -30,4 +30,11 @@ pub trait Lattice {
      * Calculates the acceptance probability if one was to flip the spin at index i.
      */
     fn acceptance(&self, diff_energy: f64) -> f64;
+
+    /**
+     * Normalizes a given observable to a per spin value.
+     */
+    fn normalize_per_spin(value: f64) -> f64;
+
+    fn specific_heat_per_spin(e: f64, e_sqr: f64, temperature: f64) -> f64;
 }

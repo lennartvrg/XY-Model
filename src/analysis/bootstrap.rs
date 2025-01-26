@@ -1,37 +1,41 @@
-use crate::observables::Observable;
 use rand::distr::Uniform;
 use rand::Rng;
 
-pub fn bootstrap(data: &[impl Observable], tau: f64, samples: usize) -> (f64, f64) {
-    let thermalized = thermalize(data, tau);
-    let blocks = blocking(&thermalized, tau);
+use crate::utils::{mean, stddev};
 
+pub fn bootstrap(data: &[f64], tau: f64, samples: usize) -> (f64, f64) {
+    bootstrap_blocked(&thermalize_and_block(data, tau), samples)
+}
+
+pub fn bootstrap_blocked(blocked: &[f64], samples: usize) -> (f64, f64) {
     let mut resamples = Vec::with_capacity(samples);
-    let range = Uniform::try_from(0..blocks.len()).unwrap();
+    let Ok(range) = Uniform::new(0, blocked.len()) else {
+        println!("Failed to to form range [0, {})", blocked.len());
+        return (0.0, 0.0);
+    };
 
     for _ in 0..samples {
         let mut running = 0.0;
-        for idx in rand::rng().sample_iter(range).take(blocks.len()) {
-            running += blocks[idx];
+        for idx in rand::rng().sample_iter(range).take(blocked.len()) {
+            running += blocked[idx];
         }
-        resamples.push(running / blocks.len() as f64);
+        resamples.push(running / blocked.len() as f64);
     }
 
-    (
-        crate::utils::mean(&resamples),
-        crate::utils::stddev(&resamples),
-    )
+    (mean(&resamples), stddev(&resamples))
 }
 
-fn thermalize(data: &[impl Observable], tau: f64) -> Vec<f64> {
+pub fn thermalize_and_block(data: &[f64], tau: f64) -> Vec<f64> {
+    blocking(&thermalize(data, tau), tau)
+}
+
+fn thermalize(data: &[f64], tau: f64) -> Vec<f64> {
     data.iter()
         .skip((3.0 * tau).ceil() as usize)
-        .map(|x| x.norm_per_site())
+        .map(|x| *x)
         .collect::<Vec<_>>()
 }
 
-fn blocking(data: &[f64], tau: f64) -> Vec<f64> {
-    data.chunks(tau.ceil() as usize)
-        .map(crate::utils::mean)
-        .collect()
+pub fn blocking(data: &[f64], tau: f64) -> Vec<f64> {
+    data.chunks(tau.ceil() as usize).map(mean).collect()
 }

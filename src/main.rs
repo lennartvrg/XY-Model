@@ -6,17 +6,17 @@ use std::sync::Arc;
 use tokio::task::JoinSet;
 
 use crate::algorithm::metropolis::Metropolis;
+use crate::lattice::Lattice;
 use crate::lattice::lattice_2d::Lattice2D;
 
 mod algorithm;
 mod analysis;
 mod constants;
 mod lattice;
-mod observables;
 mod storage;
 mod utils;
 
-const SWEEPS: usize = 64_000;
+const SWEEPS: usize = 200_000;
 
 const SCAN: RangeInclusive<usize> = 1..=100;
 
@@ -31,27 +31,21 @@ async fn simulate<const N: usize>(tx: &mut Transaction<'_, Sqlite>, id: i32) {
             let mut lattice = Lattice2D::<N>::new(1.0 / t);
 
             let (energies, _) = lattice.metropolis_hastings(&mut rng, SWEEPS);
-            let (mean, stddev, tau) = analysis::complete(&energies);
+            let (e, e_sqr, cv) = analysis::complete(Lattice2D::<N>::specific_heat_per_spin, energies, t);
 
             let mut std: std::io::StdoutLock<'_> = stdout().lock();
-            write!(
-                std,
-                "\r\tLattice {}x{}: {}/{}",
-                N,
-                N,
-                counter.fetch_add(1, Ordering::Relaxed),
-                SCAN.count()
-            )
-            .unwrap();
+            let current = counter.fetch_add(1, Ordering::Relaxed);
+
+            write!(std, "\r\tL = {}^2: {}/{}", N, current, SCAN.count()).unwrap();
             std.flush().unwrap();
 
-            (t, mean, stddev, tau)
+            (t, e, e_sqr, cv)
         });
     }
 
-    while let Some(Ok((t, mean, std, tau))) = tasks.join_next().await {
-        sqlx::query("INSERT INTO configurations (run_id, size, temperature, energy, energy_std, energy_tau) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *")
-            .bind(id).bind(N as i32).bind(t).bind(mean).bind(std).bind(tau).fetch_one(tx.as_mut()).await.unwrap();
+    while let Some(Ok((t, e, e_sqr, cv))) = tasks.join_next().await {
+        sqlx::query("INSERT INTO configurations (run_id, size, temperature, energy, energy_std, energy_tau, energy_sqr, energy_sqr_std, energy_sqr_tau, specific_heat, specific_heat_std, specific_heat_tau) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *")
+            .bind(id).bind(N as i32).bind(t).bind(e.mean).bind(e.stddev).bind(e.tau).bind(e_sqr.mean).bind(e_sqr.stddev).bind(e_sqr.tau).bind(cv.mean).bind(cv.stddev).bind(cv.tau).fetch_one(tx.as_mut()).await.unwrap();
     }
     println!();
 }
@@ -68,12 +62,13 @@ async fn simulate_all() {
             .unwrap();
 
     println!("Starting XY model simulations");
+    simulate::<4>(&mut tx, run.id).await;
     simulate::<8>(&mut tx, run.id).await;
     simulate::<16>(&mut tx, run.id).await;
     simulate::<32>(&mut tx, run.id).await;
-    simulate::<64>(&mut tx, run.id).await;
-    simulate::<128>(&mut tx, run.id).await;
-    simulate::<256>(&mut tx, run.id).await;
+    //simulate::<64>(&mut tx, run.id).await;
+    //simulate::<128>(&mut tx, run.id).await;
+    //simulate::<256>(&mut tx, run.id).await;
 
     tx.commit().await.unwrap();
 }
