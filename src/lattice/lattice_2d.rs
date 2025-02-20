@@ -3,15 +3,14 @@ use wide::{f64x2, f64x4};
 
 pub struct Lattice2D<const N: usize> {
     beta: f64,
-    spins: [[f64; N]; N],
+    spins: Box<[[f64; N]; N]>,
 }
 
 impl<const N: usize> Lattice2D<N> {
-    pub const fn new(beta: f64) -> Self {
-        Self {
-            beta,
-            spins: [[0.0; N]; N],
-        }
+    pub fn new(beta: f64) -> Self {
+        let data = vec![[0.0; N]; N].into_boxed_slice();
+        let spins = unsafe { Box::from_raw(Box::into_raw(data) as *mut [[f64; N]; N]) };
+        Self { beta, spins }
     }
 
     pub const fn num_sites(&self) -> usize {

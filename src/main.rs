@@ -7,8 +7,8 @@ use std::sync::Arc;
 use tokio::task::JoinSet;
 
 use crate::algorithm::metropolis::Metropolis;
-use crate::lattice::Lattice;
 use crate::lattice::lattice_2d::Lattice2D;
+use crate::lattice::Lattice;
 
 mod algorithm;
 mod analysis;
@@ -17,12 +17,12 @@ mod lattice;
 mod storage;
 mod utils;
 
-const SWEEPS: usize = 400_000;
+const SWEEPS: usize = 300_000;
 
 const SCAN_STEPS: usize = 128;
 
 fn scan_range() -> Map<RangeInclusive<usize>, fn(usize) -> f64> {
-    (1..=SCAN_STEPS).map(|i|i as f64 * 2.0 / SCAN_STEPS as f64)
+    (1..=SCAN_STEPS).map(|i| i as f64 * 2.0 / SCAN_STEPS as f64)
 }
 
 async fn simulate<const N: usize>(tx: &mut Transaction<'_, Sqlite>, id: i32) {
@@ -79,7 +79,7 @@ async fn simulate_all() {
     simulate::<32>(&mut tx, run.id).await;
     simulate::<64>(&mut tx, run.id).await;
     simulate::<128>(&mut tx, run.id).await;
-    //simulate::<256>(&mut tx, run.id).await;
+    simulate::<256>(&mut tx, run.id).await;
     //simulate::<512>(&mut tx, run.id).await;
     //simulate::<1024>(&mut tx, run.id).await;
     //simulate::<2048>(&mut tx, run.id).await;

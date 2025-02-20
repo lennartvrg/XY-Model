@@ -35,6 +35,6 @@ pub fn complete(data: Vec<f64>) -> (Observable, Observable) {
 
     (
         Observable::new(data, mean, stddev, tau),
-        Observable::new(data_sqr, mean_sqr, stddev_sqr, tau_sqr)
+        Observable::new(data_sqr, mean_sqr, stddev_sqr, tau_sqr),
     )
 }
