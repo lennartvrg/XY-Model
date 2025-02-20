@@ -37,4 +37,6 @@ pub trait Lattice {
     fn normalize_per_spin(value: f64) -> f64;
 
     fn specific_heat_per_spin(e: f64, e_sqr: f64, temperature: f64) -> f64;
+
+    fn magnetic_susceptibility_per_spin(m: f64, m_sqr: f64, temperature: f64) -> f64;
 }

@@ -20,9 +20,16 @@ CREATE TABLE IF NOT EXISTS "configurations" (
     energy_sqr_std      REAL        NOT NULL,
     energy_sqr_tau      REAL        NOT NULL,
 
+    magnet              REAL        NOT NULL,
+    magnet_std          REAL        NOT NULL,
+    magnet_tau          REAL        NOT NULL,
+
+    magnet_sqr          REAL        NOT NULL,
+    magnet_sqr_std      REAL        NOT NULL,
+    magnet_sqr_tau      REAL        NOT NULL,
+
     specific_heat       REAL        NOT NULL,
-    specific_heat_std   REAL        NOT NULL,
-    specific_heat_tau   REAL        NOT NULL,
+    magnet_suscept      REAL        NOT NULL,
 
     CONSTRAINT "PK.Configurations_ID" PRIMARY KEY (id),
     CONSTRAINT "FK.Configurations_RunID" FOREIGN KEY (run_id) REFERENCES "runs" (id)

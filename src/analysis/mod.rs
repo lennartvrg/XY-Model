@@ -3,7 +3,6 @@ mod bootstrap;
 
 pub use autocorrelation::autocorrelation;
 pub use bootstrap::bootstrap;
-use crate::analysis::bootstrap::bootstrap_blocked;
 
 const SAMPLES: usize = 20_000;
 
@@ -25,10 +24,7 @@ impl Observable {
     }
 }
 
-pub fn complete<F>(drv: F, data: Vec<f64>, temperature: f64) -> (Observable, Observable, Observable)
-where
-    F: Fn(f64, f64, f64) -> f64,
-{
+pub fn complete(data: Vec<f64>) -> (Observable, Observable) {
     let data_sqr = data.iter().map(|x| x.powi(2)).collect::<Vec<f64>>();
 
     let (tau, _) = autocorrelation(&data);
@@ -37,19 +33,8 @@ where
     let (tau_sqr, _) = autocorrelation(&data_sqr);
     let (mean_sqr, stddev_sqr) = bootstrap(&data_sqr, tau_sqr, SAMPLES);
 
-    let tau_max = f64::max(tau, tau_sqr);
-    let data_prep = bootstrap::thermalize_and_block(&data, tau_max);
-    let data_sqr_prep = bootstrap::thermalize_and_block(&data_sqr, tau_max);
-    let data_derived = data_prep
-        .iter()
-        .zip(data_sqr_prep.iter())
-        .map(|(x, y)| drv(*x, *y, temperature))
-        .collect::<Vec<f64>>();
-    let (mean_drv, stddev_drv) = bootstrap_blocked(&data_derived, SAMPLES);
-
     (
         Observable::new(data, mean, stddev, tau),
-        Observable::new(data_sqr, mean_sqr, stddev_sqr, tau_sqr),
-        Observable::new(data_derived, mean_drv, stddev_drv, tau_max),
+        Observable::new(data_sqr, mean_sqr, stddev_sqr, tau_sqr)
     )
 }

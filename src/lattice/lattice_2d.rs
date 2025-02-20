@@ -79,4 +79,8 @@ impl<const N: usize> Lattice for Lattice2D<N> {
     fn specific_heat_per_spin(e: f64, e_sqr: f64, temperature: f64) -> f64 {
         (e_sqr - e.powi(2)) / temperature.powi(2)
     }
+
+    fn magnetic_susceptibility_per_spin(m: f64, m_sqr: f64, temperature: f64) -> f64 {
+        (m_sqr - m.powi(2)) / temperature
+    }
 }
