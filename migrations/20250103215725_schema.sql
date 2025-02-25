@@ -31,6 +31,9 @@ CREATE TABLE IF NOT EXISTS "configurations" (
     specific_heat       REAL        NOT NULL,
     magnet_suscept      REAL        NOT NULL,
 
+    spins               TEXT        NOT NULL,
+    duration            INTEGER     NOT NULL,
+
     CONSTRAINT "PK.Configurations_ID" PRIMARY KEY (id),
     CONSTRAINT "FK.Configurations_RunID" FOREIGN KEY (run_id) REFERENCES "runs" (id)
 );

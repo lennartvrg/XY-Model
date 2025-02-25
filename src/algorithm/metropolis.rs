@@ -9,11 +9,11 @@ pub trait Metropolis {
     fn metropolis_hastings(&mut self, rng: &mut impl Rng, sweeps: usize) -> (Vec<f64>, Vec<f64>);
 }
 
-impl<const N: usize> Metropolis for Lattice2D<N> {
+impl Metropolis for Lattice2D {
     fn sweep(&mut self, rng: &mut impl Rng) -> (f64, (f64, f64)) {
         let (mut chg_energy, mut chg_magnetization_cos, mut chg_magnetization_sin) =
             (Default::default(), Default::default(), Default::default());
-        for i in 0..self.num_sites() {
+        for i in 0..self.sites() {
             let angle = rng.random_range(0.0..crate::constants::MAX_ANGLE);
             let diff_energy = self.energy_diff(i, angle);
             let (diff_magnetization_cos, diff_magnetization_sin) =
@@ -40,8 +40,8 @@ impl<const N: usize> Metropolis for Lattice2D<N> {
             cur_magnetization.0 += chg_magnetization.0;
             cur_magnetization.1 += chg_magnetization.1;
 
-            energies.push(Self::normalize_per_spin(cur_energy));
-            magnetizations.push(Self::normalize_per_spin(f64::sqrt(
+            energies.push(self.normalize_per_spin(cur_energy));
+            magnetizations.push(self.normalize_per_spin(f64::sqrt(
                 cur_magnetization.0.powi(2) + cur_magnetization.1.powi(2),
             )));
         }

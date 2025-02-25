@@ -11,6 +11,8 @@ lto = true
 rand = { version = "0.9.0" }
 rustfft = { version = "6.2.0" }
 num-complex = { version = "0.4.6" }
+serde_json = { version = "1.0.139", default-features = false }
 wide = { version = "0.7.32", default-features = false, features = ["std"] }
 tokio = { version = "1.43.0", default-features = false, features = ["rt-multi-thread"] }
 sqlx = { version = "0.8.3", features = ["sqlite", "runtime-tokio", "migrate", "derive"] }
+clap = { version = "4.5.30", default-features = false, features = ["std", "derive", "help", "usage"] }
