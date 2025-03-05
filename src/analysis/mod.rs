@@ -5,7 +5,7 @@ pub use autocorrelation::autocorrelation;
 pub use bootstrap::bootstrap;
 use rand::Rng;
 
-const SAMPLES: usize = 10_000;
+const SAMPLES: usize = 20_000;
 
 pub struct Observable {
     pub mean: f64,
