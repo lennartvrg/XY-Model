@@ -5,9 +5,10 @@ CREATE TABLE IF NOT EXISTS "runs" (
     CONSTRAINT "PK.Runs_ID" PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS "configurations" (
+CREATE TABLE IF NOT EXISTS "results" (
     id                  INTEGER     NOT NULL,
     run_id              INTEGER     NOT NULL,
+    dimension           INTEGER     NOT NULL,
 
     size                INTEGER     NOT NULL,
     temperature         REAL        NOT NULL,
@@ -29,24 +30,15 @@ CREATE TABLE IF NOT EXISTS "configurations" (
     magnet_sqr_tau      REAL        NOT NULL,
 
     specific_heat       REAL        NOT NULL,
+    specific_heat_std   REAL        NOT NULL,
     magnet_suscept      REAL        NOT NULL,
+    magnet_suscept_std  REAL        NOT NULL,
 
     spins               TEXT        NOT NULL,
     duration            INTEGER     NOT NULL,
 
-    CONSTRAINT "PK.Configurations_ID" PRIMARY KEY (id),
-    CONSTRAINT "FK.Configurations_RunID" FOREIGN KEY (run_id) REFERENCES "runs" (id)
+    CONSTRAINT "PK.Results_ID" PRIMARY KEY (id),
+    CONSTRAINT "FK.Results_RunID" FOREIGN KEY (run_id) REFERENCES "runs" (id)
 );
 
-CREATE INDEX "IX.Configurations_RunID" ON "configurations" (run_id);
-
-CREATE TABLE IF NOT EXISTS "observables" (
-    configuration_id    INTEGER     NOT NULL,
-    sequence_id         INTEGER     NOT NULL,
-
-    e                   REAL        NOT NULL,
-    m                   REAL        NOT NULL,
-
-    CONSTRAINT "PK.Observables_ConfigurationID_SequenceID" PRIMARY KEY (configuration_id, sequence_id),
-    CONSTRAINT "FK.Observables_ConfigurationID" FOREIGN KEY (configuration_id) REFERENCES "configurations" (id)
-);
+CREATE INDEX "IX.Results_RunID_Dimension" ON "results" (run_id, dimension);

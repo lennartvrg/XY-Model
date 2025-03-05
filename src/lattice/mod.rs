@@ -1,6 +1,17 @@
+pub mod lattice_1d;
 pub mod lattice_2d;
 
 pub trait Lattice {
+    /**
+     * The dimensions of the lattice
+     */
+    const DIM: usize;
+
+    /**
+     * Creates a new lattice
+     */
+    fn new(length: usize, beta: f64) -> Self;
+
     /**
      * Number of sites on the lattice
      */
@@ -39,9 +50,26 @@ pub trait Lattice {
     /**
      * Normalizes a given observable to a per spin value.
      */
-    fn normalize_per_spin(&self, value: f64) -> f64;
+    fn normalize_per_spin(&self, value: f64) -> f64 {
+        value / self.sites() as f64
+    }
 
-    fn specific_heat_per_spin(e: f64, e_sqr: f64, temperature: f64) -> f64;
+    fn specific_heat_per_spin(e: f64, e_std: f64, e_sqr: f64, e_sqr_std: f64, temperature: f64) -> (f64, f64) {
+        (
+            (e_sqr - e.powi(2)) / temperature.powi(2),
+            f64::sqrt((e_sqr_std / temperature.powi(2)).powi(2) + (2.0 * e * e_std / temperature.powi(2)).powi(2))
+        )
+    }
 
-    fn magnetic_susceptibility_per_spin(m: f64, m_sqr: f64, temperature: f64) -> f64;
+    fn magnetic_susceptibility_per_spin(m: f64, m_std: f64, m_sqr: f64, m_sqr_std: f64, temperature: f64) -> (f64, f64) {
+        (
+            (m_sqr - m.powi(2)) / temperature,
+            f64::sqrt((m_sqr_std / temperature).powi(2) + (2.0 * m * m_std / temperature).powi(2))
+        )
+    }
+
+    /**
+     * Destructs the instance and returns the spins
+     */
+    fn spins(self) -> Box<[f64]>;
 }

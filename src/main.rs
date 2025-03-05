@@ -6,7 +6,9 @@ use std::sync::Arc;
 use tokio::task::JoinSet;
 
 use crate::algorithm::metropolis::Metropolis;
+use crate::lattice::lattice_1d::Lattice1D;
 use crate::lattice::lattice_2d::Lattice2D;
+use crate::lattice::Lattice;
 
 mod algorithm;
 mod analysis;
@@ -16,35 +18,40 @@ mod lattice;
 mod storage;
 mod utils;
 
-const SWEEPS: usize = 400_000;
+const SWEEPS: usize = 800_000;
 
-const SCAN_STEPS: usize = 128;
+const STEPS: usize = 128;
 
-fn split_range(range: Range<f64>, steps: usize) -> Vec<f64> {
-    (1..=steps)
-        .map(move |i| range.start + i as f64 * (range.end - range.start) / steps as f64)
-        .collect::<Vec<_>>()
+fn split_range(range: Range<f64>, steps: usize) -> impl Iterator<Item = f64> {
+    (1..=steps).map(move |i| range.start + i as f64 * (range.end - range.start) / steps as f64)
 }
 
 fn temperature_range() -> impl Iterator<Item = f64> {
     split_range(0.0..0.75, 16)
-        .into_iter()
         .chain(split_range(0.75..1.25, 96))
         .chain(split_range(1.25..2.0, 16))
 }
 
-async fn simulate(size: usize, storage: &mut storage::Storage, id: i32) {
+async fn simulate<L>(
+    id: i32,
+    size: usize,
+    storage: &mut storage::Storage,
+    range: impl Iterator<Item = f64>,
+) where
+    L: Lattice,
+{
     let counter = Arc::new(AtomicUsize::new(1));
 
     let mut tasks = JoinSet::new();
-    for t in temperature_range() {
+    for t in range {
         let counter = counter.clone();
         tasks.spawn_blocking(move || {
             let mut rng = rand::rng();
-            let mut lattice = Lattice2D::new(size, 1.0 / t);
+            let mut lattice = L::new(size, 1.0 / t);
 
             let start = std::time::Instant::now();
             let (energies, magnets) = lattice.metropolis_hastings(&mut rng, SWEEPS);
+            let ms = start.elapsed().as_millis();
 
             let e = analysis::complete(&mut rng, energies);
             let m = analysis::complete(&mut rng, magnets);
@@ -52,18 +59,16 @@ async fn simulate(size: usize, storage: &mut storage::Storage, id: i32) {
             let mut std: std::io::StdoutLock<'_> = stdout().lock();
             let current = counter.fetch_add(1, Ordering::Relaxed);
 
-            write!(std, "\r\tL = {}^2: {}/{}", size, current, SCAN_STEPS).unwrap();
+            write!(std, "\r\t{}D L = {}^2: {}/{}", L::DIM, size, current, STEPS).unwrap();
             std.flush().unwrap();
 
             let spins = serde_json::to_string(&lattice.spins()).unwrap();
-            let ms = start.elapsed().as_millis();
-
             storage::Configuration::new(t, e, m, spins, ms)
         });
     }
 
     let results = tasks.join_all().await;
-    storage.insert_results(id, size, &results).await;
+    storage.insert_results(id, L::DIM, size, &results).await;
 
     println!();
 }
@@ -77,7 +82,8 @@ async fn simulate_all(args: arguments::Arguments) {
 
     println!("Starting XY model simulations for run {}", run.id);
     for size in args.sizes {
-        simulate(size, &mut storage, run.id).await;
+        simulate::<Lattice1D>(run.id, size, &mut storage, split_range(0.0..2.0, STEPS)).await;
+        simulate::<Lattice2D>(run.id, size, &mut storage, temperature_range()).await;
     }
 }
 
