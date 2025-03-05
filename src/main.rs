@@ -27,10 +27,10 @@ fn split_range(range: Range<f64>, steps: usize) -> Vec<f64> {
 }
 
 fn temperature_range() -> impl Iterator<Item = f64> {
-    split_range(0.0..0.75, 24)
+    split_range(0.0..0.75, 16)
         .into_iter()
-        .chain(split_range(0.75..1.25, 80))
-        .chain(split_range(1.25..2.0, 24))
+        .chain(split_range(0.75..1.25, 96))
+        .chain(split_range(1.25..2.0, 16))
 }
 
 async fn simulate(size: usize, storage: &mut storage::Storage, id: i32) {
@@ -62,7 +62,9 @@ async fn simulate(size: usize, storage: &mut storage::Storage, id: i32) {
         });
     }
 
-    storage.insert_results(id, size, &tasks.join_all().await).await;
+    let results = tasks.join_all().await;
+    storage.insert_results(id, size, &results).await;
+
     println!();
 }
 

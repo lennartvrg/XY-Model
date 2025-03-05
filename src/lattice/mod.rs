@@ -2,6 +2,11 @@ pub mod lattice_2d;
 
 pub trait Lattice {
     /**
+     * Number of sites on the lattice
+     */
+    fn sites(&self) -> usize;
+
+    /**
      * Flips the spin at index i.
      */
     fn update_angle(&mut self, i: usize, angle: f64);

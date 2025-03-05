@@ -20,16 +20,16 @@ impl Lattice2D {
         self.size
     }
 
-    pub const fn sites(&self) -> usize {
-        self.size * self.size
-    }
-
     pub fn spins(self) -> Box<[f64]> {
         self.spins
     }
 }
 
 impl Lattice for Lattice2D {
+    fn sites(&self) -> usize {
+        self.spins.len()
+    }
+
     fn update_angle(&mut self, i: usize, angle: f64) {
         self.spins[i] = angle;
     }
