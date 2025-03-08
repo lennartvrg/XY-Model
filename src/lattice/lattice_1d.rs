@@ -1,5 +1,5 @@
 use crate::lattice::Lattice;
-use wide::f64x2;
+use wide::{f64x2, f64x4};
 
 pub struct Lattice1D {
     beta: f64,
@@ -10,6 +10,7 @@ impl Lattice for Lattice1D {
     const DIM: usize = 1;
 
     fn new(length: usize, beta: f64) -> Self {
+        assert_eq!(length % 4, 0);
         Self {
             beta,
             spins: vec![0.0; length].into_boxed_slice(),
@@ -26,8 +27,15 @@ impl Lattice for Lattice1D {
 
     fn energy(&self) -> f64 {
         let mut result = 0.0;
-        for i in 0..self.sites() {
-            result += f64::cos(self.spins[i] - self.spins[(i + 1) % self.sites()]);
+        for i in (0..self.sites()).step_by(4) {
+            let old = f64x4::splat(self.spins[i]);
+            let neighbours = f64x4::new([
+                self.spins[(i + 1) % self.sites()],
+                self.spins[(i + 2) % self.sites()],
+                self.spins[(i + 3) % self.sites()],
+                self.spins[(i + 4) % self.sites()],
+            ]);
+            result += (old - neighbours).cos().reduce_add();
         }
         -result
     }
@@ -47,15 +55,6 @@ impl Lattice for Lattice1D {
         before - after
     }
 
-    fn magnetization(&self) -> (f64, f64) {
-        let (mut cos, mut sin) = (0.0, 0.0);
-        for i in 0..self.sites() {
-            cos += f64::cos(self.spins[i]);
-            sin += f64::sin(self.spins[i]);
-        }
-        (cos, sin)
-    }
-
     fn magnetization_diff(&self, i: usize, angle: f64) -> (f64, f64) {
         let (sin, cos) = f64x2::from([angle, std::f64::consts::PI + self.spins[i]]).sin_cos();
         (cos.reduce_add(), sin.reduce_add())
@@ -65,7 +64,7 @@ impl Lattice for Lattice1D {
         f64::min(1.0, f64::exp(-self.beta * diff_energy))
     }
 
-    fn spins(self) -> Box<[f64]> {
-        self.spins
+    fn spins(&self) -> &[f64] {
+        &self.spins
     }
 }

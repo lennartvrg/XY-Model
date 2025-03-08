@@ -1,3 +1,4 @@
+use std::ops::Range;
 use std::time::SystemTime;
 
 pub fn unix_time() -> i32 {
@@ -14,4 +15,8 @@ pub fn mean(data: &[f64]) -> f64 {
 pub fn stddev(data: &[f64]) -> f64 {
     let mean = mean(data);
     data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / data.len() as f64
+}
+
+pub fn split_range(range: Range<f64>, steps: usize) -> impl Iterator<Item = f64> {
+    (1..=steps).map(move |i| range.start + i as f64 * (range.end - range.start) / steps as f64)
 }

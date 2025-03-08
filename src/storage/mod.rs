@@ -37,13 +37,7 @@ impl Storage {
             .unwrap()
     }
 
-    pub async fn insert_results(
-        &mut self,
-        id: i32,
-        dim: usize,
-        size: usize,
-        configurations: &[Configuration],
-    ) {
+    pub async fn insert_results(&mut self, id: i32, size: usize, configurations: &[Configuration]) {
         let mut tx = self.0.begin().await.unwrap();
         for cfg in configurations {
             let (cv, cv_std) = Lattice2D::specific_heat_per_spin(
@@ -65,7 +59,7 @@ impl Storage {
             sqlx::query("
                 INSERT INTO results (run_id, dimension, size, temperature, energy, energy_std, energy_tau, energy_sqr, energy_sqr_std, energy_sqr_tau, magnet, magnet_std, magnet_tau, magnet_sqr, magnet_sqr_std, magnet_sqr_tau, specific_heat, specific_heat_std, magnet_suscept, magnet_suscept_std, spins, duration)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, json($21), $22)
-            ").bind(id).bind(dim as i32).bind(size as i32).bind(cfg.temperature)
+            ").bind(id).bind(cfg.dimension as i32).bind(size as i32).bind(cfg.temperature)
                 .bind(cfg.energy.mean).bind(cfg.energy.stddev).bind(cfg.energy.tau)
                 .bind(cfg.energy.sqr_mean).bind(cfg.energy.sqr_stddev).bind(cfg.energy.sqr_tau)
                 .bind(cfg.magnetization.mean).bind(cfg.magnetization.stddev).bind(cfg.magnetization.tau)

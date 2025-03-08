@@ -6,6 +6,7 @@ pub struct Run {
 }
 
 pub struct Configuration {
+    pub dimension: usize,
     pub temperature: f64,
     pub energy: Observable,
     pub magnetization: Observable,
@@ -15,6 +16,7 @@ pub struct Configuration {
 
 impl Configuration {
     pub const fn new(
+        dimension: usize,
         temperature: f64,
         energy: Observable,
         magnetization: Observable,
@@ -22,6 +24,7 @@ impl Configuration {
         time: u128,
     ) -> Self {
         Self {
+            dimension,
             temperature,
             energy,
             magnetization,

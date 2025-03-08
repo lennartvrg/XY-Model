@@ -3,9 +3,8 @@ mod bootstrap;
 
 pub use autocorrelation::autocorrelation;
 pub use bootstrap::bootstrap;
-use rand::Rng;
 
-const SAMPLES: usize = 20_000;
+const SAMPLES: usize = 160_000;
 
 pub struct Observable {
     pub mean: f64,
@@ -37,7 +36,7 @@ impl Observable {
     }
 }
 
-pub fn complete(rng: &mut impl Rng, data: Vec<f64>) -> Observable {
+pub fn complete(rng: &mut fastrand::Rng, data: Vec<f64>) -> Observable {
     let data_sqr = data.iter().map(|x| x.powi(2)).collect::<Vec<f64>>();
 
     let (tau, _) = autocorrelation(&data);

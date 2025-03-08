@@ -1,6 +1,5 @@
 use clap::Parser;
 use std::io::{stdout, Write};
-use std::ops::Range;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use tokio::task::JoinSet;
@@ -9,6 +8,8 @@ use crate::algorithm::metropolis::Metropolis;
 use crate::lattice::lattice_1d::Lattice1D;
 use crate::lattice::lattice_2d::Lattice2D;
 use crate::lattice::Lattice;
+use crate::storage::Configuration;
+use crate::utils::split_range;
 
 mod algorithm;
 mod analysis;
@@ -22,55 +23,52 @@ const SWEEPS: usize = 400_000;
 
 const STEPS: usize = 128;
 
-fn split_range(range: Range<f64>, steps: usize) -> impl Iterator<Item = f64> {
-    (1..=steps).map(move |i| range.start + i as f64 * (range.end - range.start) / steps as f64)
-}
-
 fn temperature_range() -> impl Iterator<Item = f64> {
     split_range(0.0..0.75, 16)
         .chain(split_range(0.75..1.25, 96))
         .chain(split_range(1.25..2.0, 16))
 }
 
-async fn simulate<L>(
-    id: i32,
-    size: usize,
-    storage: &mut storage::Storage,
-    range: impl Iterator<Item = f64>,
-) where
+fn simulate_single<L>(size: usize, temperature: f64, counter: Arc<AtomicUsize>) -> Configuration
+where
+    L: Lattice,
+{
+    // Initialize rng generator and lattice
+    let mut rng = fastrand::Rng::new().clone();
+    let mut lattice = L::new(size, 1.0 / temperature);
+
+    // Perform metropolis_hastings and measure time
+    let start = std::time::Instant::now();
+    let (energies, magnets) = lattice.metropolis_hastings(&mut rng, SWEEPS);
+    let ms = start.elapsed().as_millis();
+
+    // Perform bootstrap analysis on observables
+    let e = analysis::complete(&mut rng, energies);
+    let m = analysis::complete(&mut rng, magnets);
+
+    // Write debug information
+    let mut std: std::io::StdoutLock<'_> = stdout().lock();
+    let current = counter.fetch_add(1, Ordering::Relaxed);
+
+    write!(std, "\r\t{}D L = {}^2: {}/{}", L::DIM, size, current, STEPS).unwrap();
+    std.flush().unwrap();
+
+    // Returns results
+    let spins = serde_json::to_string(lattice.spins()).unwrap();
+    Configuration::new(L::DIM, temperature, e, m, spins, ms)
+}
+
+async fn simulate_size<L>(size: usize, range: impl Iterator<Item = f64>) -> Vec<Configuration>
+where
     L: Lattice,
 {
     let counter = Arc::new(AtomicUsize::new(1));
-
     let mut tasks = JoinSet::new();
     for t in range {
         let counter = counter.clone();
-        tasks.spawn_blocking(move || {
-            let mut rng = rand::rng();
-            let mut lattice = L::new(size, 1.0 / t);
-
-            let start = std::time::Instant::now();
-            let (energies, magnets) = lattice.metropolis_hastings(&mut rng, SWEEPS);
-            let ms = start.elapsed().as_millis();
-
-            let e = analysis::complete(&mut rng, energies);
-            let m = analysis::complete(&mut rng, magnets);
-
-            let mut std: std::io::StdoutLock<'_> = stdout().lock();
-            let current = counter.fetch_add(1, Ordering::Relaxed);
-
-            write!(std, "\r\t{}D L = {}^2: {}/{}", L::DIM, size, current, STEPS).unwrap();
-            std.flush().unwrap();
-
-            let spins = serde_json::to_string(&lattice.spins()).unwrap();
-            storage::Configuration::new(t, e, m, spins, ms)
-        });
+        tasks.spawn_blocking(move || simulate_single::<L>(size, t, counter.clone()));
     }
-
-    let results = tasks.join_all().await;
-    storage.insert_results(id, L::DIM, size, &results).await;
-
-    println!();
+    tasks.join_all().await
 }
 
 async fn simulate_all(args: arguments::Arguments) {
@@ -82,8 +80,13 @@ async fn simulate_all(args: arguments::Arguments) {
 
     println!("Starting XY model simulations for run {}", run.id);
     for size in args.sizes {
-        simulate::<Lattice1D>(run.id, size, &mut storage, split_range(0.0..2.0, STEPS)).await;
-        simulate::<Lattice2D>(run.id, size, &mut storage, temperature_range()).await;
+        let mut results = simulate_size::<Lattice1D>(size, split_range(0.0..2.0, STEPS)).await;
+        println!();
+
+        results.append(&mut simulate_size::<Lattice2D>(size, temperature_range()).await);
+        println!();
+
+        storage.insert_results(run.id, size, &results).await;
     }
 }
 
