@@ -19,7 +19,7 @@ mod lattice;
 mod storage;
 mod utils;
 
-const SWEEPS: usize = 400_000;
+const SWEEPS: usize = 100_000;
 
 const STEPS: usize = 128;
 

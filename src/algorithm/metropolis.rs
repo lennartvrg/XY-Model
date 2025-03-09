@@ -3,7 +3,11 @@ use crate::lattice::Lattice;
 pub trait Metropolis {
     fn sweep(&mut self, rng: &mut fastrand::Rng) -> (f64, (f64, f64));
 
-    fn metropolis_hastings(&mut self, rng: &mut fastrand::Rng, sweeps: usize) -> (Vec<f64>, Vec<f64>);
+    fn metropolis_hastings(
+        &mut self,
+        rng: &mut fastrand::Rng,
+        sweeps: usize,
+    ) -> (Vec<f64>, Vec<f64>);
 }
 
 impl<T> Metropolis for T
@@ -28,7 +32,11 @@ where
         (chg_energy, (chg_magnet_cos, chg_magnet_sin))
     }
 
-    fn metropolis_hastings(&mut self, rng: &mut fastrand::Rng, sweeps: usize) -> (Vec<f64>, Vec<f64>) {
+    fn metropolis_hastings(
+        &mut self,
+        rng: &mut fastrand::Rng,
+        sweeps: usize,
+    ) -> (Vec<f64>, Vec<f64>) {
         let mut energies = Vec::<f64>::with_capacity(sweeps);
         let mut magnets = Vec::<f64>::with_capacity(sweeps);
 
