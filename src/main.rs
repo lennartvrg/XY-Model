@@ -21,9 +21,9 @@ mod utils;
 
 const STEPS: usize = 256;
 
-const SWEEPS: usize = 800_000;
+const SWEEPS: usize = 400_000;
 
-const RESAMPLES: usize = 80_000;
+const RESAMPLES: usize = 20_000;
 
 fn simulate_size<L>(
     counter: Arc<AtomicUsize>,
@@ -93,12 +93,15 @@ fn main() {
 
     println!("Starting XY model simulations for run {}", run.id);
     for size in args.sizes {
+        // Simulate 1D lattice
         let mut results = simulate::<Lattice1D>(size);
         println!();
 
+        // Simulate 2D lattice
         results.append(&mut simulate::<Lattice2D>(size));
         println!();
 
+        // Store combined results in SQlite database
         storage.insert_results(run.id, size, &results);
     }
 }
