@@ -70,8 +70,21 @@ where
 }
 
 fn main() {
+    // Parse CLI arguments and connect to SQLite database
     let args = arguments::Arguments::parse();
     let mut storage = storage::Storage::connect();
+
+    // Some debug information for SBATCH
+    match std::thread::available_parallelism() {
+        Ok(v) => println!("System has {} threads", v),
+        Err(v) => println!("Could not fetch system thread count: {}", v)
+    };
+
+    // Some debug information for SBATCH
+    match std::env::var("RAYON_NUM_THREADS") {
+        Ok(v) => println!("RAYON uses {} threads", v),
+        Err(v) => println!("Could not fetch RAYON thread count: {}", v)
+    }
 
     let run = match storage.get_run(args.run_id) {
         None => storage.create_run(),
