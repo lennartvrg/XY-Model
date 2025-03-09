@@ -1,6 +1,7 @@
+use rusqlite::Connection;
+
 mod types;
 
-use rusqlite::Connection;
 use crate::lattice::lattice_2d::Lattice2D;
 use crate::lattice::Lattice;
 use crate::utils;
@@ -12,24 +13,27 @@ pub struct Storage(Connection);
 
 impl Storage {
     pub fn connect() -> Self {
-        let conn = Connection::open("output.sqlite?mode=rwc").unwrap();
-        conn.execute(MIGRATION, ()).unwrap();
+        let conn = Connection::open("output.sqlite").unwrap();
+        conn.execute_batch(MIGRATION).unwrap();
         Self(conn)
     }
 
     pub fn get_run(&mut self, id: Option<i32>) -> Option<Run> {
-        let mut stmt = self.0.prepare("SELECT id FROM runs WHERE id = $1").unwrap();
-        let mut rows = stmt.query_map((id?,), |row| Ok(Run {
-            id: row.get(0)?
-        })).unwrap();
+        let mut stmt = self.0.prepare("SELECT * FROM runs WHERE id = $1").unwrap();
+        let mut rows = stmt
+            .query_map((id?,), |row| Ok(Run { id: row.get(0)? }))
+            .unwrap();
         rows.nth(0).transpose().unwrap()
     }
 
     pub fn create_run(&mut self) -> Run {
-        let mut stmt = self.0.prepare("INSERT INTO runs (created_at) VALUES ($1) RETURNING id").unwrap();
-        let mut rows = stmt.query_map((utils::unix_time(),), |row| Ok(Run {
-            id: row.get(0)?
-        })).unwrap();
+        let mut stmt = self
+            .0
+            .prepare("INSERT INTO runs (created_at) VALUES ($1) RETURNING *")
+            .unwrap();
+        let mut rows = stmt
+            .query_map((utils::unix_time(),), |row| Ok(Run { id: row.get(0)? }))
+            .unwrap();
         rows.nth(0).transpose().unwrap().unwrap()
     }
 
@@ -58,13 +62,30 @@ impl Storage {
             );
 
             stmt.execute(rusqlite::params![
-                id, cfg.dimension as i32, size as i32, cfg.temperature,
-                cfg.energy.mean, cfg.energy.stddev, cfg.energy.tau,
-                cfg.energy.sqr_mean, cfg.energy.sqr_stddev, cfg.energy.sqr_tau,
-                cfg.magnetization.mean, cfg.magnetization.stddev, cfg.magnetization.tau,
-                cfg.magnetization.sqr_mean, cfg.magnetization.sqr_stddev, cfg.magnetization.sqr_tau,
-                cv, cv_std, xs, xs_std,  &cfg.spins, cfg.time as i32
-            ]).unwrap();
+                id,
+                cfg.dimension as i32,
+                size as i32,
+                cfg.temperature,
+                cfg.energy.mean,
+                cfg.energy.stddev,
+                cfg.energy.tau,
+                cfg.energy.sqr_mean,
+                cfg.energy.sqr_stddev,
+                cfg.energy.sqr_tau,
+                cfg.magnetization.mean,
+                cfg.magnetization.stddev,
+                cfg.magnetization.tau,
+                cfg.magnetization.sqr_mean,
+                cfg.magnetization.sqr_stddev,
+                cfg.magnetization.sqr_tau,
+                cv,
+                cv_std,
+                xs,
+                xs_std,
+                &cfg.spins,
+                cfg.time as i32
+            ])
+            .unwrap();
         }
         drop(stmt);
         tx.commit().unwrap();

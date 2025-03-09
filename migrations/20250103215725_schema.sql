@@ -1,3 +1,5 @@
+BEGIN;
+
 CREATE TABLE IF NOT EXISTS "runs" (
     id                  INTEGER     NOT NULL,
     created_at          INTEGER     NOT NULL,
@@ -42,3 +44,5 @@ CREATE TABLE IF NOT EXISTS "results" (
 );
 
 CREATE INDEX IF NOT EXISTS "IX.Results_RunID_Dimension" ON "results" (run_id, dimension);
+
+COMMIT;

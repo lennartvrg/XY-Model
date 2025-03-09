@@ -1,15 +1,15 @@
 use clap::Parser;
+use rayon::prelude::*;
 use std::io::{stdout, Write};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
-use rayon::prelude::*;
 
 use crate::algorithm::metropolis::Metropolis;
 use crate::lattice::lattice_1d::Lattice1D;
 use crate::lattice::lattice_2d::Lattice2D;
 use crate::lattice::Lattice;
 use crate::storage::Configuration;
-use crate::utils::split_range;
+use crate::utils::parallel_range;
 
 mod algorithm;
 mod analysis;
@@ -19,44 +19,53 @@ mod lattice;
 mod storage;
 mod utils;
 
-const SWEEPS: usize = 100_000;
+const STEPS: usize = 256;
 
-const STEPS: usize = 128;
+const SWEEPS: usize = 800_000;
 
-fn temperature_range() -> impl Iterator<Item = f64> {
-    split_range(0.0..0.75, 16)
-        .chain(split_range(0.75..1.25, 96))
-        .chain(split_range(1.25..2.0, 16))
+const RESAMPLES: usize = 80_000;
+
+fn simulate_size<L>(
+    counter: Arc<AtomicUsize>,
+    size: usize,
+    rng: &mut fastrand::Rng,
+    t: f64,
+) -> Configuration
+where
+    L: Lattice,
+{
+    // Initialize lattice
+    let mut lattice = L::new(size, 1.0 / t);
+
+    // Perform metropolis_hastings and measure time
+    let start = std::time::Instant::now();
+    let (energies, magnets) = lattice.metropolis_hastings(rng, SWEEPS);
+
+    // Perform bootstrap analysis on observables
+    let e = analysis::complete(rng, energies, RESAMPLES);
+    let m = analysis::complete(rng, magnets, RESAMPLES);
+
+    // Write console information
+    let mut std: std::io::StdoutLock<'_> = stdout().lock();
+    let current = counter.fetch_add(1, Ordering::Relaxed);
+
+    write!(std, "\r\tD{} L{}: {}/{}", L::DIM, size, current, STEPS).unwrap();
+    std.flush().unwrap();
+
+    // Serialize spins
+    let spins = serde_json::to_string(lattice.spins()).unwrap();
+    let ms = start.elapsed().as_millis();
+
+    Configuration::new(L::DIM, t, e, m, spins, ms)
 }
 
-fn simulate_size<L>(size: usize, range: impl IntoParallelIterator<Item = f64>) -> Vec<Configuration>
+fn simulate<L>(size: usize) -> Vec<Configuration>
 where
     L: Lattice,
 {
     let counter = Arc::new(AtomicUsize::new(1));
-    range.into_par_iter().map_init(|| fastrand::Rng::new(), |rng, t| {
-        // Initialize lattice
-        let mut lattice = L::new(size, 1.0 / t);
-
-        // Perform metropolis_hastings and measure time
-        let start = std::time::Instant::now();
-        let (energies, magnets) = lattice.metropolis_hastings(rng, SWEEPS);
-        let ms = start.elapsed().as_millis();
-
-        // Perform bootstrap analysis on observables
-        let e = analysis::complete(rng, energies);
-        let m = analysis::complete(rng, magnets);
-
-        // Write debug information
-        let mut std: std::io::StdoutLock<'_> = stdout().lock();
-        let current = counter.fetch_add(1, Ordering::Relaxed);
-
-        write!(std, "\r\t{}D L = {}^2: {}/{}", L::DIM, size, current, STEPS).unwrap();
-        std.flush().unwrap();
-
-        // Returns results
-        let spins = serde_json::to_string(lattice.spins()).unwrap();
-        Configuration::new(L::DIM, t, e, m, spins, ms)
+    parallel_range(0.0..2.0, STEPS).map_init(fastrand::Rng::new, |rng, t| {
+            simulate_size::<L>(counter.clone(), size, rng, t)
     }).collect::<Vec<_>>()
 }
 
@@ -71,10 +80,10 @@ fn main() {
 
     println!("Starting XY model simulations for run {}", run.id);
     for size in args.sizes {
-        let mut results = simulate_size::<Lattice1D>(size, split_range(0.0..2.0, STEPS).collect::<Vec<_>>());
+        let mut results = simulate::<Lattice1D>(size);
         println!();
 
-        results.append(&mut simulate_size::<Lattice2D>(size, temperature_range().collect::<Vec<_>>()));
+        results.append(&mut simulate::<Lattice2D>(size));
         println!();
 
         storage.insert_results(run.id, size, &results);

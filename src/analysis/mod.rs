@@ -4,8 +4,6 @@ mod bootstrap;
 pub use autocorrelation::autocorrelation;
 pub use bootstrap::bootstrap;
 
-const SAMPLES: usize = 40_000;
-
 pub struct Observable {
     pub mean: f64,
     pub stddev: f64,
@@ -36,14 +34,14 @@ impl Observable {
     }
 }
 
-pub fn complete(rng: &mut fastrand::Rng, data: Vec<f64>) -> Observable {
+pub fn complete(rng: &mut fastrand::Rng, data: Vec<f64>, resamples: usize) -> Observable {
     let data_sqr = data.iter().map(|x| x.powi(2)).collect::<Vec<f64>>();
 
     let (tau, _) = autocorrelation(&data);
-    let (mean, stddev) = bootstrap(rng, &data, tau, data.len(), SAMPLES);
+    let (mean, stddev) = bootstrap(rng, &data, tau, resamples);
 
     let (tau_sqr, _) = autocorrelation(&data_sqr);
-    let (mean_sqr, stddev_sqr) = bootstrap(rng, &data_sqr, tau_sqr, data.len(), SAMPLES);
+    let (mean_sqr, stddev_sqr) = bootstrap(rng, &data_sqr, tau_sqr, resamples);
 
     Observable::new(mean, stddev, tau, mean_sqr, stddev_sqr, tau_sqr)
 }

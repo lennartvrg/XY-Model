@@ -1,15 +1,8 @@
-use std::array::TryFromSliceError;
-use crate::utils::{mean, stddev};
 use wide::f64x4;
+use crate::utils::{mean, stddev};
 
-pub fn bootstrap(
-    rng: &mut fastrand::Rng,
-    data: &[f64],
-    tau: f64,
-    a: usize,
-    b: usize,
-) -> (f64, f64) {
-    bootstrap_blocked(rng, &thermalize_and_block(data, tau), a, b)
+pub fn bootstrap(rng: &mut fastrand::Rng, data: &[f64], tau: f64, b: usize) -> (f64, f64) {
+    bootstrap_blocked(rng, &thermalize_and_block(data, tau), data.len(), b)
 }
 
 pub fn bootstrap_blocked(
@@ -27,20 +20,15 @@ pub fn bootstrap_blocked(
 
 fn resample_blocked(rng: &mut fastrand::Rng, blocked: &[f64], a: usize) -> f64 {
     let mut running = 0.0;
-    while let Some(Ok([a, b, c, d])) = chunk_range::<4>(rng, a).iter().next().copied() {
-        running += f64x4::new([blocked[a], blocked[b], blocked[c], blocked[d]]).reduce_add();
+    for _ in (0..a).step_by(4) {
+        running += f64x4::new([
+            blocked[rng.usize(0..blocked.len())],
+            blocked[rng.usize(0..blocked.len())],
+            blocked[rng.usize(0..blocked.len())],
+            blocked[rng.usize(0..blocked.len())]
+        ]).reduce_add();
     }
     running / a as f64
-}
-
-fn chunk_range<const N: usize>(
-    rng: &mut fastrand::Rng,
-    a: usize,
-) -> Vec<Result<[usize; N], TryFromSliceError>> {
-    rng.choose_multiple(0..a, a)
-        .chunks_exact(N)
-        .map(TryInto::<[usize; N]>::try_into)
-        .collect::<Vec<_>>()
 }
 
 pub fn thermalize_and_block(data: &[f64], tau: f64) -> Vec<f64> {

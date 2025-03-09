@@ -29,11 +29,18 @@ impl Lattice for Lattice2D {
 
     fn energy(&self) -> f64 {
         let mut result = 0.0;
-        for i in 0..self.sites() {
-            let old = f64x2::splat(self.spins[i]);
-            let neighbours = f64x2::new([
+        for i in (0..self.sites()).step_by(2) {
+            let old = f64x4::new([
+                self.spins[i],
+                self.spins[i],
+                self.spins[i + 1],
+                self.spins[i + 1],
+            ]);
+            let neighbours = f64x4::new([
                 self.spins[(i + 1) % self.sites()],
                 self.spins[(i + self.length) % self.sites()],
+                self.spins[(i + 2) % self.sites()],
+                self.spins[(i + 1 + self.length) % self.sites()],
             ]);
             result += (old - neighbours).cos().reduce_add();
         }
