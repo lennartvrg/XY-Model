@@ -21,9 +21,9 @@ mod utils;
 
 const STEPS: usize = 256;
 
-const SWEEPS: usize = 400_000;
+const SWEEPS: usize = 800_000;
 
-const RESAMPLES: usize = 20_000;
+const RESAMPLES: usize = 40_000;
 
 fn simulate_size<L>(
     counter: Arc<AtomicUsize>,
