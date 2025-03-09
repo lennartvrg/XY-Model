@@ -1,6 +1,5 @@
 use crate::analysis::Observable;
 
-#[derive(sqlx::FromRow)]
 pub struct Run {
     pub id: i32,
 }

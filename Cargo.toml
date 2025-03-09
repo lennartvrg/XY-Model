@@ -12,9 +12,9 @@ strip = false
 [dependencies]
 fastrand = { version = "2.3.0" }
 rustfft = { version = "6.2.0" }
+rayon = { version = "1.10.0" }
 num-complex = { version = "0.4.6" }
-serde_json = { version = "1.0.140", default-features = false }
+rusqlite = { version = "0.34.0", features = ["bundled"] }
 wide = { version = "0.7.32", default-features = false, features = ["std"] }
-tokio = { version = "1.44.0", default-features = false, features = ["rt-multi-thread"] }
-sqlx = { version = "0.8.3", features = ["sqlite", "runtime-tokio", "migrate", "derive"] }
+serde_json = { version = "1.0.140", default-features = false, features = ["std"] }
 clap = { version = "4.5.31", default-features = false, features = ["std", "derive", "help", "usage"] }

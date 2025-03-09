@@ -41,4 +41,4 @@ CREATE TABLE IF NOT EXISTS "results" (
     CONSTRAINT "FK.Results_RunID" FOREIGN KEY (run_id) REFERENCES "runs" (id)
 );
 
-CREATE INDEX "IX.Results_RunID_Dimension" ON "results" (run_id, dimension);
+CREATE INDEX IF NOT EXISTS "IX.Results_RunID_Dimension" ON "results" (run_id, dimension);
