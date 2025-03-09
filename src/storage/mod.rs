@@ -40,8 +40,8 @@ impl Storage {
     pub fn insert_results(&mut self, id: i32, size: usize, configurations: &[Configuration]) {
         let tx = self.0.transaction().unwrap();
         let mut stmt = tx.prepare("
-            INSERT INTO results (run_id, dimension, size, temperature, energy, energy_std, energy_tau, energy_sqr, energy_sqr_std, energy_sqr_tau, magnet, magnet_std, magnet_tau, magnet_sqr, magnet_sqr_std, magnet_sqr_tau, specific_heat, specific_heat_std, magnet_suscept, magnet_suscept_std, spins, duration)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, json($21), $22)
+            INSERT INTO results (run_id, dimension, size, temperature, energy, energy_std, energy_tau, energy_sqr, energy_sqr_std, energy_sqr_tau, magnet, magnet_std, magnet_tau, magnet_sqr, magnet_sqr_std, magnet_sqr_tau, specific_heat, specific_heat_std, magnet_suscept, magnet_suscept_std, spins, time_mc, time_boot)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, json($21), $22, $23)
         ").unwrap();
 
         for cfg in configurations {
@@ -83,7 +83,8 @@ impl Storage {
                 xs,
                 xs_std,
                 &cfg.spins,
-                cfg.time as i32
+                cfg.time_mc as i32,
+                cfg.time_boot as i32
             ])
             .unwrap();
         }

@@ -10,7 +10,8 @@ pub struct Configuration {
     pub energy: Observable,
     pub magnetization: Observable,
     pub spins: String,
-    pub time: u128,
+    pub time_mc: u128,
+    pub time_boot: u128,
 }
 
 impl Configuration {
@@ -20,7 +21,8 @@ impl Configuration {
         energy: Observable,
         magnetization: Observable,
         spins: String,
-        time: u128,
+        time_mc: u128,
+        time_boot: u128,
     ) -> Self {
         Self {
             dimension,
@@ -28,7 +30,8 @@ impl Configuration {
             energy,
             magnetization,
             spins,
-            time,
+            time_mc,
+            time_boot
         }
     }
 }

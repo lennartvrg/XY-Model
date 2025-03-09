@@ -37,7 +37,8 @@ CREATE TABLE IF NOT EXISTS "results" (
     magnet_suscept_std  REAL        NOT NULL,
 
     spins               TEXT        NOT NULL,
-    duration            INTEGER     NOT NULL,
+    time_mc             INTEGER     NOT NULL,
+    time_boot           INTEGER     NOT NULL,
 
     CONSTRAINT "PK.Results_ID" PRIMARY KEY (id),
     CONSTRAINT "FK.Results_RunID" FOREIGN KEY (run_id) REFERENCES "runs" (id)

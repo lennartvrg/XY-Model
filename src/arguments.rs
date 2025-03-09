@@ -10,6 +10,11 @@ pub struct Arguments {
     #[arg(short = 'r', long = "run_id")]
     pub run_id: Option<i32>,
 
-    /// The lengths of the lattice sides which will be simulated.
-    pub sizes: Vec<usize>,
+    /// The lengths of the 1D lattice sides which will be simulated.
+    #[arg(short = 'o', long = "one", num_args = 0..)]
+    pub one: Vec<usize>,
+
+    /// The lengths of the 2D lattice sides which will be simulated.
+    #[arg(short = 't', long = "two", num_args = 0..)]
+    pub two: Vec<usize>,
 }
