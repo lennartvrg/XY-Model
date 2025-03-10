@@ -4,7 +4,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=256
-#SBATCH --time=12:00:00
+#SBATCH --time=13:30:00
 #SBATCH --partition=batch
 
 # *** start of job script ***
@@ -12,4 +12,4 @@
 # the directory where sbatch was executed.
 
 export RAYON_NUM_THREADS=${SLURM_CPUS_PER_TASK}
-srun target/release/XY-Model --one 16 32 48 64 --two 16 32 48 64 80 96 112 128 144 160 176 192 208 224 240 256
+srun target/release/XY-Model --two 176 192 256 272 288 304 320
