@@ -1,4 +1,5 @@
 use crate::analysis::Observable;
+use crate::lattice::Lattice;
 
 pub struct Run {
     pub id: i32,
@@ -9,29 +10,32 @@ pub struct Configuration {
     pub temperature: f64,
     pub energy: Observable,
     pub magnetization: Observable,
-    pub spins: String,
+    pub cv: (f64, f64),
+    pub xs: (f64, f64),
     pub time_mc: u128,
     pub time_boot: u128,
 }
 
 impl Configuration {
-    pub const fn new(
-        dimension: usize,
-        temperature: f64,
+    pub fn new<L>(
+        lattice: &L,
         energy: Observable,
         magnetization: Observable,
-        spins: String,
         time_mc: u128,
         time_boot: u128,
-    ) -> Self {
+    ) -> Self
+    where
+        L: Lattice,
+    {
         Self {
-            dimension,
-            temperature,
+            dimension: L::DIM,
+            temperature: lattice.temperature(),
+            cv: lattice.specific_heat_per_spin(&energy),
+            xs: lattice.magnetic_susceptibility_per_spin(&magnetization),
             energy,
             magnetization,
-            spins,
             time_mc,
-            time_boot
+            time_boot,
         }
     }
 }

@@ -4,6 +4,7 @@ mod bootstrap;
 pub use autocorrelation::autocorrelation;
 pub use bootstrap::bootstrap;
 
+#[derive(Clone)]
 pub struct Observable {
     pub mean: f64,
     pub stddev: f64,

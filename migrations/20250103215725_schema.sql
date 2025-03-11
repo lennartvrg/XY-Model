@@ -36,7 +36,6 @@ CREATE TABLE IF NOT EXISTS "results" (
     magnet_suscept      REAL        NOT NULL,
     magnet_suscept_std  REAL        NOT NULL,
 
-    spins               TEXT        NOT NULL,
     time_mc             INTEGER     NOT NULL,
     time_boot           INTEGER     NOT NULL,
 

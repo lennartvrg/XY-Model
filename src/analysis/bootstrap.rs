@@ -1,5 +1,5 @@
-use wide::f64x4;
 use crate::utils::{mean, stddev};
+use wide::f64x4;
 
 pub fn bootstrap(rng: &mut fastrand::Rng, data: &[f64], tau: f64, b: usize) -> (f64, f64) {
     bootstrap_blocked(rng, &thermalize_and_block(data, tau), data.len(), b)
@@ -25,8 +25,9 @@ fn resample_blocked(rng: &mut fastrand::Rng, blocked: &[f64], a: usize) -> f64 {
             blocked[rng.usize(0..blocked.len())],
             blocked[rng.usize(0..blocked.len())],
             blocked[rng.usize(0..blocked.len())],
-            blocked[rng.usize(0..blocked.len())]
-        ]).reduce_add();
+            blocked[rng.usize(0..blocked.len())],
+        ])
+        .reduce_add();
     }
     running / a as f64
 }

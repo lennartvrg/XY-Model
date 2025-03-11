@@ -1,13 +1,12 @@
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelIterator;
 use std::ops::Range;
-use std::time::SystemTime;
+use std::time::{SystemTime, SystemTimeError};
 
-pub fn unix_time() -> i32 {
-    SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap()
-        .as_secs() as i32
+pub fn unix_time() -> Result<i32, SystemTimeError> {
+    Ok(SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)?
+        .as_secs() as i32)
 }
 
 pub fn mean(data: &[f64]) -> f64 {

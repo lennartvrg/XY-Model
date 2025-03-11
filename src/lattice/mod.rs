@@ -1,3 +1,4 @@
+use crate::analysis::Observable;
 use wide::f64x4;
 
 pub mod lattice_1d;
@@ -13,6 +14,11 @@ pub trait Lattice {
      * Creates a new lattice
      */
     fn new(length: usize, beta: f64) -> Self;
+
+    /**
+     * Temperature of the lattice
+     */
+    fn temperature(&self) -> f64;
 
     /**
      * Number of sites on the lattice
@@ -40,8 +46,8 @@ pub trait Lattice {
     fn magnetization(&self) -> (f64, f64) {
         let (mut cos, mut sin) = (0.0, 0.0);
         for i in (0..self.sites()).step_by(4) {
-            let data: [f64; 4] = self.spins()[i..(i + 4)].try_into().unwrap();
-            let (s, c) = f64x4::new(data).sin_cos();
+            let data = self.spins();
+            let (s, c) = f64x4::new([data[i], data[i + 1], data[i + 2], data[i + 3]]).sin_cos();
 
             cos += c.reduce_add();
             sin += s.reduce_add();
@@ -66,32 +72,21 @@ pub trait Lattice {
         value / self.sites() as f64
     }
 
-    fn specific_heat_per_spin(
-        e: f64,
-        e_std: f64,
-        e_sqr: f64,
-        e_sqr_std: f64,
-        temperature: f64,
-    ) -> (f64, f64) {
+    fn specific_heat_per_spin(&self, energy: &Observable) -> (f64, f64) {
         (
-            (e_sqr - e.powi(2)) / temperature.powi(2),
-            f64::sqrt(
-                (e_sqr_std / temperature.powi(2)).powi(2)
-                    + (2.0 * e * e_std / temperature.powi(2)).powi(2),
-            ),
+            (energy.sqr_mean - energy.mean.powi(2)) / self.temperature().powi(2),
+            ((energy.sqr_stddev / self.temperature().powi(2)).powi(2)
+                + (2.0 * energy.mean * energy.stddev / self.temperature().powi(2)).powi(2))
+            .sqrt(),
         )
     }
 
-    fn magnetic_susceptibility_per_spin(
-        m: f64,
-        m_std: f64,
-        m_sqr: f64,
-        m_sqr_std: f64,
-        temperature: f64,
-    ) -> (f64, f64) {
+    fn magnetic_susceptibility_per_spin(&self, magnet: &Observable) -> (f64, f64) {
         (
-            (m_sqr - m.powi(2)) / temperature,
-            f64::sqrt((m_sqr_std / temperature).powi(2) + (2.0 * m * m_std / temperature).powi(2)),
+            (magnet.sqr_mean - magnet.mean.powi(2)) / self.temperature(),
+            ((magnet.sqr_stddev / self.temperature()).powi(2)
+                + (2.0 * magnet.mean * magnet.stddev / self.temperature()).powi(2))
+            .sqrt(),
         )
     }
 

@@ -1,4 +1,5 @@
 use crate::lattice::Lattice;
+use rustfft::num_traits::Inv;
 use wide::{f64x2, f64x4};
 
 pub struct Lattice1D {
@@ -15,6 +16,10 @@ impl Lattice for Lattice1D {
             beta,
             spins: vec![0.0; length].into_boxed_slice(),
         }
+    }
+
+    fn temperature(&self) -> f64 {
+        self.beta.inv()
     }
 
     fn sites(&self) -> usize {
