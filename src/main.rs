@@ -9,7 +9,7 @@ use crate::lattice::lattice_1d::Lattice1D;
 use crate::lattice::lattice_2d::Lattice2D;
 use crate::lattice::Lattice;
 use crate::storage::Configuration;
-use crate::utils::parallel_range;
+use crate::utils::range;
 
 mod algorithm;
 mod analysis;
@@ -19,11 +19,17 @@ mod lattice;
 mod storage;
 mod utils;
 
-const STEPS: usize = 64;
+const STEPS: usize = 128;
 
-const SWEEPS: usize = 400_000;
+const SWEEPS: usize = 1_000_000;
 
-const RESAMPLES: usize = 40_000;
+const RESAMPLES: usize = 100_000;
+
+fn weighted_range() -> impl ParallelIterator<Item = f64> {
+    range(0.0..0.75, 16)
+        .chain(range(0.75..1.25, 96))
+        .chain(range(1.25..2.0, 16))
+}
 
 fn simulate_size<L>(
     counter: Arc<AtomicUsize>,
@@ -58,16 +64,18 @@ where
     Configuration::new(&lattice, e, m, time_mc, time_boot)
 }
 
-fn simulate<L>(size: usize) -> Vec<Configuration>
+fn simulate<L, I>(size: usize, range: I) -> Vec<Configuration>
 where
     L: Lattice,
+    I: ParallelIterator<Item = f64>,
 {
     let counter = Arc::new(AtomicUsize::new(1));
-    parallel_range(0.0..2.0, STEPS)
-        .map_init(fastrand::Rng::new, |rng, t| {
-            simulate_size::<L>(counter.clone(), size, rng, t)
-        })
-        .collect::<Vec<_>>()
+    let results = range.map_init(fastrand::Rng::new, |rng, t| {
+        simulate_size::<L>(counter.clone(), size, rng, t)
+    }).collect::<Vec<_>>();
+
+    println!();
+    results
 }
 
 fn main() -> Result<(), rusqlite::Error> {
@@ -93,21 +101,21 @@ fn main() -> Result<(), rusqlite::Error> {
         Some(run) => run,
     };
 
+    // Simulate 1D lattice and store results in SQlite database
     if !args.one.is_empty() {
         println!("Starting 1D XY model simulations for run {}", run.id);
         for size in args.one {
-            // Simulate 1D lattice and store results in SQlite database
-            storage.insert_results(run.id, size, &simulate::<Lattice1D>(size))?;
-            println!();
+            let configurations = simulate::<Lattice1D, _>(size, range(0.0..2.0, STEPS));
+            storage.insert_results(run.id, size, &configurations)?;
         }
     }
 
+    // Simulate 1D lattice and store results in SQlite database
     if !args.two.is_empty() {
         println!("Starting 2D XY model simulations for run {}", run.id);
         for size in args.two {
-            // Simulate 1D lattice and store results in SQlite database
-            storage.insert_results(run.id, size, &simulate::<Lattice2D>(size))?;
-            println!();
+            let configurations = simulate::<Lattice2D, _>(size, weighted_range());
+            storage.insert_results(run.id, size, &configurations)?;
         }
     }
     Ok(())

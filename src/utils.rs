@@ -18,7 +18,7 @@ pub fn stddev(data: &[f64]) -> f64 {
     data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / data.len() as f64
 }
 
-pub fn parallel_range(range: Range<f64>, steps: usize) -> impl ParallelIterator<Item = f64> {
+pub fn range(range: Range<f64>, steps: usize) -> impl ParallelIterator<Item = f64> {
     (1..=steps)
         .into_par_iter()
         .map(move |i| range.start + i as f64 * (range.end - range.start) / steps as f64)

@@ -4,14 +4,17 @@
 #SBATCH --nodes=4
 #SBATCH --ntasks-per-node=2
 #SBATCH --cpus-per-task=128
-#SBATCH --time=13:30:00
+#SBATCH --time=04:00:00
 #SBATCH --partition=batch
 
-# *** start of job script ***
-# Note: The current working directory at this point is
-# the directory where sbatch was executed.
-
 export RAYON_NUM_THREADS=${SLURM_CPUS_PER_TASK}
-for size in 8 16 24 32; do
-    target/release/XY-Model --run_id 1 --two $size
+
+# RUN 1D SIMULATIONS
+for size in 16 32 48 64; do
+    srun --exclusive -n 128 target/release/XY-Model --run_id 1 --one $size
+done
+
+# RUN 2D SIMULATIONS
+for size in 16 32 48 64; do
+    srun --exclusive -n 128 target/release/XY-Model --run_id 1 --two $size
 done
