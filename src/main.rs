@@ -8,7 +8,7 @@ use crate::lattice::lattice_1d::Lattice1D;
 use crate::lattice::lattice_2d::Lattice2D;
 use crate::lattice::Lattice;
 use crate::storage::Configuration;
-use crate::utils::{hostname, range};
+use crate::utils::{host, range};
 
 mod algorithm;
 mod analysis;
@@ -20,9 +20,9 @@ mod utils;
 
 const STEPS: usize = 128;
 
-const SWEEPS: usize = 1_000_000;
+const SWEEPS: usize = 1_200_000;
 
-const RESAMPLES: usize = 100_000;
+const RESAMPLES: usize = 120_000;
 
 fn weighted_range() -> impl ParallelIterator<Item = f64> {
     range(0.0..0.75, 16)
@@ -53,7 +53,7 @@ where
 
     // Write console information
     let current = counter.fetch_add(1, Ordering::Relaxed);
-    let _ = println!("[{}] D{} L{}: {}/{}", hostname(), L::DIM, size, current, STEPS);
+    println!("[{}] D{} L{}: {}/{}", host(), L::DIM, size, current, STEPS);
 
     // Serialize spins
     let time_boot = start.elapsed().as_millis() - time_mc;
@@ -66,9 +66,11 @@ where
     I: ParallelIterator<Item = f64>,
 {
     let counter = Arc::new(AtomicUsize::new(1));
-    let results = range.map_init(fastrand::Rng::new, |rng, t| {
-        simulate_size::<L>(counter.clone(), size, rng, t)
-    }).collect::<Vec<_>>();
+    let results = range
+        .map_init(fastrand::Rng::new, |rng, t| {
+            simulate_size::<L>(counter.clone(), size, rng, t)
+        })
+        .collect::<Vec<_>>();
 
     println!();
     results
@@ -81,14 +83,14 @@ fn main() -> Result<(), rusqlite::Error> {
 
     // Some debug information for SBATCH
     match std::thread::available_parallelism() {
-        Ok(v) => println!("[{}] System has {} threads", hostname(), v),
-        Err(v) => println!("[{}] Could not fetch system thread count: {}", hostname(), v),
+        Ok(v) => println!("[{}] System has {} threads", host(), v),
+        Err(v) => println!("[{}] Could not fetch system thread count: {}", host(), v),
     };
 
     // Some debug information for SBATCH
     match std::env::var("RAYON_NUM_THREADS") {
-        Ok(v) => println!("[{}] RAYON uses {} threads", hostname(), v),
-        Err(v) => println!("[{}] Could not fetch RAYON thread count: {}", hostname(), v),
+        Ok(v) => println!("[{}] RAYON uses {} threads", host(), v),
+        Err(v) => println!("[{}] Could not fetch RAYON thread count: {}", host(), v),
     }
 
     // Fetches or creates the current run
@@ -101,12 +103,13 @@ fn main() -> Result<(), rusqlite::Error> {
     storage.ensure_allocations(run.id, &args.one, &args.two)?;
 
     // While a next allocation is available => process it
-    while let Some((dimension, size)) = storage.next_allocation(run.id, &hostname())? {
-        println!("[{}] Next allocation: D{} L{}", hostname(), dimension, size);
-        storage.insert_results(run.id, size, &match dimension {
+    while let Some((dimension, size)) = storage.next_allocation(run.id, &host())? {
+        println!("[{}] Next allocation: D{} L{}", host(), dimension, size);
+        let configurations = match dimension {
             1 => simulate::<Lattice1D, _>(size, range(0.0..2.0, STEPS)),
             _ => simulate::<Lattice2D, _>(size, weighted_range()),
-        })?;
+        };
+        storage.insert_results(run.id, size, &configurations)?;
     }
     Ok(())
 }

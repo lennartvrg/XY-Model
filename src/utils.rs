@@ -9,8 +9,11 @@ pub fn unix_time() -> Result<i32, SystemTimeError> {
         .as_secs() as i32)
 }
 
-pub fn hostname() -> String {
-    gethostname::gethostname().to_str().unwrap_or("<NONE>").to_owned()
+pub fn host() -> String {
+    gethostname::gethostname()
+        .to_str()
+        .unwrap_or("<NONE>")
+        .to_owned()
 }
 
 pub fn mean(data: &[f64]) -> f64 {

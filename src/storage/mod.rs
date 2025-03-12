@@ -1,11 +1,11 @@
-use rusqlite::{params, Connection};
 use rusqlite::TransactionBehavior::Immediate;
+use rusqlite::{params, Connection, OptionalExtension};
 
 mod types;
 
 use crate::utils;
-pub use types::*;
 use crate::utils::unix_time;
+pub use types::*;
 
 const MIGRATION: &str = include_str!("../../migrations/20250103215725_schema.sql");
 
@@ -18,9 +18,16 @@ impl Storage {
         Ok(Self(conn))
     }
 
-    pub fn ensure_allocations(&mut self, id: i32, one: &[usize], two: &[usize]) -> Result<(), rusqlite::Error> {
+    pub fn ensure_allocations(
+        &mut self,
+        id: i32,
+        one: &[usize],
+        two: &[usize],
+    ) -> Result<(), rusqlite::Error> {
         let tx = self.0.transaction_with_behavior(Immediate)?;
-        let mut stmt = tx.prepare("INSERT OR IGNORE INTO allocations (run_id, dimension, size) VALUES ($1, $2, $3)")?;
+        let mut stmt = tx.prepare(
+            "INSERT OR IGNORE INTO allocations (run_id, dimension, size) VALUES ($1, $2, $3)",
+        )?;
 
         for val in one {
             stmt.execute(params![id, 1, val])?;
@@ -34,20 +41,20 @@ impl Storage {
         tx.commit()
     }
 
-    pub fn next_allocation(&mut self, id: i32, hostname: &str) -> Result<Option<(usize, usize)>, rusqlite::Error> {
+    pub fn next_allocation(
+        &mut self,
+        id: i32,
+        hostname: &str,
+    ) -> Result<Option<(usize, usize)>, rusqlite::Error> {
         let params = (hostname, unix_time().unwrap_or_default(), id);
         let tx = self.0.transaction_with_behavior(Immediate)?;
 
         let mut stmt = tx.prepare("UPDATE allocations SET hostname = $1, allocated_at = $2 WHERE id IN (SELECT id FROM allocations WHERE run_id = $3 AND hostname IS NULL ORDER BY dimension, size LIMIT 1) RETURNING *")?;
-        let result = match stmt.query_map(params, Self::row_to_allocation)?.next() {
-            Some(v) => Some(v?),
-            _ => None,
-        };
+        let result = stmt.query_row(params, Self::row_to_allocation).optional()?;
 
         drop(stmt);
         tx.commit()?;
         Ok(result)
-
     }
 
     pub fn get_run(&mut self, id: Option<i32>) -> Result<Option<Run>, rusqlite::Error> {
@@ -57,25 +64,16 @@ impl Storage {
         };
 
         let mut stmt = self.0.prepare("SELECT * FROM runs WHERE id = $1")?;
-        let result = match stmt.query_map(params, Self::row_to_run)?.next() {
-            Some(v) => Ok(Some(v?)),
-            _ => Ok(None),
-        }; result
+        stmt.query_row(params, Self::row_to_run).optional()
     }
 
     pub fn create_run(&mut self) -> Result<Run, rusqlite::Error> {
         let tx = self.0.transaction_with_behavior(Immediate)?;
         let params = (utils::unix_time().unwrap_or_default(),);
 
-        let mut stmt = tx.prepare("INSERT OR IGNORE INTO runs (created_at) VALUES ($1) RETURNING *")?;
-        let result = match stmt.query_map(params, Self::row_to_run)?.next() {
-            Some(v) => Ok(v?),
-            _ => panic!("Failed to insert run"),
-        };
-
-        drop(stmt);
-        tx.commit()?;
-        result
+        let mut stmt =
+            tx.prepare("INSERT OR IGNORE INTO runs (created_at) VALUES ($1) RETURNING *")?;
+        stmt.query_row(params, Self::row_to_run)
     }
 
     fn row_to_run(row: &rusqlite::Row) -> rusqlite::Result<Run> {
