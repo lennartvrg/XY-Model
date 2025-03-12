@@ -1,8 +1,8 @@
 use clap::Parser;
 use rayon::prelude::*;
-use std::io::{stdout, Write};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use gethostname::gethostname;
 
 use crate::algorithm::metropolis::Metropolis;
 use crate::lattice::lattice_1d::Lattice1D;
@@ -53,11 +53,8 @@ where
     let m = analysis::complete(rng, magnets, RESAMPLES);
 
     // Write console information
-    let mut std: std::io::StdoutLock<'_> = stdout().lock();
     let current = counter.fetch_add(1, Ordering::Relaxed);
-
-    let _ = write!(std, "\r\tL{}: {}/{}", size, current, STEPS);
-    let _ = std.flush();
+    let _ = println!("[{:?}]\tL{}: {}/{}", gethostname(), size, current, STEPS);
 
     // Serialize spins
     let time_boot = start.elapsed().as_millis() - time_mc;
@@ -85,14 +82,14 @@ fn main() -> Result<(), rusqlite::Error> {
 
     // Some debug information for SBATCH
     match std::thread::available_parallelism() {
-        Ok(v) => println!("System has {} threads", v),
-        Err(v) => println!("Could not fetch system thread count: {}", v),
+        Ok(v) => println!("[{:?}] System has {} threads", gethostname(), v),
+        Err(v) => println!("[{:?}] Could not fetch system thread count: {}", gethostname(), v),
     };
 
     // Some debug information for SBATCH
     match std::env::var("RAYON_NUM_THREADS") {
-        Ok(v) => println!("RAYON uses {} threads", v),
-        Err(v) => println!("Could not fetch RAYON thread count: {}", v),
+        Ok(v) => println!("[{:?}] RAYON uses {} threads", gethostname(), v),
+        Err(v) => println!("[{:?}] Could not fetch RAYON thread count: {}", gethostname(), v),
     }
 
     // Fetches or creates the current run
@@ -103,7 +100,7 @@ fn main() -> Result<(), rusqlite::Error> {
 
     // Simulate 1D lattice and store results in SQlite database
     if !args.one.is_empty() {
-        println!("Starting 1D XY model simulations for run {}", run.id);
+        println!("[{:?}] Starting 1D XY model simulations for run {}", gethostname(), run.id);
         for size in args.one {
             let configurations = simulate::<Lattice1D, _>(size, range(0.0..2.0, STEPS));
             storage.insert_results(run.id, size, &configurations)?;
@@ -112,7 +109,7 @@ fn main() -> Result<(), rusqlite::Error> {
 
     // Simulate 1D lattice and store results in SQlite database
     if !args.two.is_empty() {
-        println!("Starting 2D XY model simulations for run {}", run.id);
+        println!("[{:?}] Starting 2D XY model simulations for run {}", gethostname(), run.id);
         for size in args.two {
             let configurations = simulate::<Lattice2D, _>(size, weighted_range());
             storage.insert_results(run.id, size, &configurations)?;

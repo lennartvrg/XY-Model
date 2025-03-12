@@ -16,5 +16,5 @@ rayon = { version = "1.10.0" }
 num-complex = { version = "0.4.6" }
 rusqlite = { version = "=0.32.0", features = ["bundled"] }
 wide = { version = "0.7.32", default-features = false, features = ["std"] }
-serde_json = { version = "1.0.140", default-features = false, features = ["std"] }
 clap = { version = "4.5.31", default-features = false, features = ["std", "derive", "help", "usage"] }
+gethostname = { version = "1.0.0" }

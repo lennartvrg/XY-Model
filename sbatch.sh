@@ -1,8 +1,8 @@
 #!/bin/bash -x
 #SBATCH --account=training2442
 #SBATCH --threads-per-core=2
-#SBATCH --nodes=4
-#SBATCH --ntasks-per-node=256
+#SBATCH --nodes=2
+#SBATCH --ntasks-per-node=2
 #SBATCH --cpus-per-task=128
 #SBATCH --time=04:00:00
 #SBATCH --partition=batch
