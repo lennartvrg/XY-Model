@@ -3,7 +3,6 @@ use rusqlite::{params, Connection, OptionalExtension};
 
 mod types;
 
-use crate::utils;
 use crate::utils::unix_time;
 pub use types::*;
 
@@ -69,11 +68,14 @@ impl Storage {
 
     pub fn create_run(&mut self) -> Result<Run, rusqlite::Error> {
         let tx = self.0.transaction_with_behavior(Immediate)?;
-        let params = (utils::unix_time().unwrap_or_default(),);
+        let params = (unix_time().unwrap_or_default(),);
 
-        let mut stmt =
-            tx.prepare("INSERT OR IGNORE INTO runs (created_at) VALUES ($1) RETURNING *")?;
-        stmt.query_row(params, Self::row_to_run)
+        let mut stmt = tx.prepare("INSERT INTO runs (created_at) VALUES ($1) RETURNING *")?;
+        let result = stmt.query_row(params, Self::row_to_run)?;
+
+        drop(stmt);
+        tx.commit()?;
+        Ok(result)
     }
 
     fn row_to_run(row: &rusqlite::Row) -> rusqlite::Result<Run> {
