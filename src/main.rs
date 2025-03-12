@@ -20,14 +20,14 @@ mod utils;
 
 const STEPS: usize = 128;
 
-const SWEEPS: usize = 1_200_000;
+const SWEEPS: usize = 800_000;
 
-const RESAMPLES: usize = 120_000;
+const RESAMPLES: usize = 160_000;
 
 fn weighted_range() -> impl ParallelIterator<Item = f64> {
-    range(0.0..0.75, 16)
-        .chain(range(0.75..1.25, 96))
-        .chain(range(1.25..2.0, 16))
+    range(0.0..0.75, 24)
+        .chain(range(0.75..1.25, 80))
+        .chain(range(1.25..2.0, 24))
 }
 
 fn simulate_size<L>(
@@ -66,14 +66,9 @@ where
     I: ParallelIterator<Item = f64>,
 {
     let counter = Arc::new(AtomicUsize::new(1));
-    let results = range
-        .map_init(fastrand::Rng::new, |rng, t| {
-            simulate_size::<L>(counter.clone(), size, rng, t)
-        })
-        .collect::<Vec<_>>();
-
-    println!();
-    results
+    range.map_init(fastrand::Rng::new, |rng, t| {
+        simulate_size::<L>(counter.clone(), size, rng, t)
+    }).collect::<Vec<_>>()
 }
 
 fn main() -> Result<(), rusqlite::Error> {
