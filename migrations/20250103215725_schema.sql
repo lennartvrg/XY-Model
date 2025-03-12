@@ -1,4 +1,4 @@
-BEGIN;
+BEGIN IMMEDIATE;
 
 CREATE TABLE IF NOT EXISTS "runs" (
     id                  INTEGER     NOT NULL,
