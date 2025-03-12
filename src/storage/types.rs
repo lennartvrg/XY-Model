@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use crate::analysis::Observable;
 use crate::lattice::Lattice;
 
@@ -5,6 +6,7 @@ pub struct Run {
     pub id: i32,
 }
 
+#[derive(Clone, Debug)]
 pub struct Configuration {
     pub dimension: usize,
     pub temperature: f64,
@@ -37,5 +39,9 @@ impl Configuration {
             time_mc,
             time_boot,
         }
+    }
+
+    pub fn temp_cmp(a: &&Configuration, b: &&Configuration) -> Ordering {
+        a.temperature.total_cmp(&b.temperature)
     }
 }

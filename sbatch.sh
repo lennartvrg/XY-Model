@@ -1,10 +1,10 @@
 #!/bin/bash -x
 #SBATCH --account=training2442
 #SBATCH --threads-per-core=1
-#SBATCH --nodes=4
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=128
-#SBATCH --time=06:00:00
+#SBATCH --nodes=2
+#SBATCH --ntasks-per-node=4
+#SBATCH --cpus-per-task=32
+#SBATCH --time=04:00:00
 #SBATCH --partition=batch
 
 export RAYON_NUM_THREADS=${SLURM_CPUS_PER_TASK}

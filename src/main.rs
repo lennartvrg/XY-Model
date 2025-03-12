@@ -18,17 +18,13 @@ mod lattice;
 mod storage;
 mod utils;
 
-const STEPS: usize = 128;
+const STEPS: usize = 32;
 
-const SWEEPS: usize = 80_000;
+const SWEEPS: usize = 800_000;
 
-const RESAMPLES: usize = 16_000;
+const RESAMPLES: usize = 160_000;
 
-fn weighted_range() -> impl ParallelIterator<Item = f64> {
-    range(0.0..0.75, 16)
-        .chain(range(0.75..1.25, 96))
-        .chain(range(1.25..2.0, 16))
-}
+const MAX_DEPTH: usize = 2;
 
 fn simulate_size<L>(
     counter: Arc<AtomicUsize>,
@@ -53,22 +49,48 @@ where
 
     // Write console information
     let current = counter.fetch_add(1, Ordering::Relaxed);
-    println!("[{}] D{} L{}: {}/{}", host(), L::DIM, size, current, STEPS);
+    println!("[{}] D{} L{}: {}/{}", host(), L::DIM, size, current, MAX_DEPTH * STEPS);
 
     // Serialize spins
     let time_boot = start.elapsed().as_millis() - time_mc;
     Configuration::new(&lattice, e, m, time_mc, time_boot)
 }
 
-fn simulate<L, I>(size: usize, range: I) -> Vec<Configuration>
+fn simulate<L>(size: usize) -> Vec<Configuration>
 where
-    L: Lattice,
-    I: ParallelIterator<Item = f64>,
+    L: Lattice
 {
+    // Result set and counter
+    let mut results = Vec::new();
     let counter = Arc::new(AtomicUsize::new(1));
-    range.map_init(fastrand::Rng::new, |rng, t| {
-        simulate_size::<L>(counter.clone(), size, rng, t)
-    }).collect::<Vec<_>>()
+
+    // Create inital range and loop trough depth
+    let mut range = range(0.0..2.0, STEPS);
+    for _ in 0..MAX_DEPTH {
+        // Simulate lattice and append results
+        results.append(&mut range.map_init(fastrand::Rng::new, |rng, t| {
+            simulate_size::<L>(counter.clone(), size, rng, t)
+        }).collect::<Vec<_>>());
+
+        // Order by magnetic susceptibility
+        results.sort_by(|a, b| a.xs.0.total_cmp(&b.xs.0));
+        let top = results.iter().rev().take(5).cloned().collect::<Vec<_>>();
+
+        // Get the lower bound of the next range
+        let Some(lower) = top.iter().min_by(Configuration::temp_cmp) else {
+            break;
+        };
+
+        // Get the upper bound of the next range
+        let Some(upper) = top.iter().max_by(Configuration::temp_cmp) else {
+            break;
+        };
+
+        // Generate next range
+        range = utils::range(lower.temperature..upper.temperature, STEPS);
+    }
+
+    results
 }
 
 fn main() -> Result<(), rusqlite::Error> {
@@ -101,8 +123,8 @@ fn main() -> Result<(), rusqlite::Error> {
     while let Some((dimension, size)) = storage.next_allocation(run.id, &host())? {
         println!("[{}] Next allocation: D{} L{}", host(), dimension, size);
         let configurations = match dimension {
-            1 => simulate::<Lattice1D, _>(size, range(0.0..2.0, STEPS)),
-            _ => simulate::<Lattice2D, _>(size, weighted_range()),
+            1 => simulate::<Lattice1D>(size),
+            _ => simulate::<Lattice2D>(size),
         };
         storage.insert_results(run.id, size, &configurations)?;
     }
