@@ -27,8 +27,7 @@ impl Storage {
         let result = match stmt.query_map(params, Self::row_to_run)?.next() {
             Some(v) => Ok(Some(v?)),
             _ => Ok(None),
-        };
-        result
+        }; result
     }
 
     pub fn create_run(&mut self) -> Result<Run, rusqlite::Error> {
