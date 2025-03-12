@@ -20,9 +20,9 @@ mod utils;
 
 const STEPS: usize = 128;
 
-const SWEEPS: usize = 1_000_00;
+const SWEEPS: usize = 1_000_000;
 
-const RESAMPLES: usize = 100_00;
+const RESAMPLES: usize = 100_000;
 
 fn weighted_range() -> impl ParallelIterator<Item = f64> {
     range(0.0..0.75, 16)
