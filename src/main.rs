@@ -20,14 +20,14 @@ mod utils;
 
 const STEPS: usize = 128;
 
-const SWEEPS: usize = 800_000;
+const SWEEPS: usize = 80_000;
 
-const RESAMPLES: usize = 160_000;
+const RESAMPLES: usize = 16_000;
 
 fn weighted_range() -> impl ParallelIterator<Item = f64> {
-    range(0.0..0.75, 24)
-        .chain(range(0.75..1.25, 80))
-        .chain(range(1.25..2.0, 24))
+    range(0.0..0.75, 16)
+        .chain(range(0.75..1.25, 96))
+        .chain(range(1.25..2.0, 16))
 }
 
 fn simulate_size<L>(

@@ -48,7 +48,7 @@ impl Storage {
         let params = (hostname, unix_time().unwrap_or_default(), id);
         let tx = self.0.transaction_with_behavior(Immediate)?;
 
-        let mut stmt = tx.prepare("UPDATE allocations SET hostname = $1, allocated_at = $2 WHERE id IN (SELECT id FROM allocations WHERE run_id = $3 AND hostname IS NULL ORDER BY dimension, size LIMIT 1) RETURNING *")?;
+        let mut stmt = tx.prepare("UPDATE allocations SET hostname = $1, allocated_at = $2 WHERE id IN (SELECT id FROM allocations WHERE run_id = $3 AND hostname IS NULL ORDER BY RANDOM() LIMIT 1) RETURNING *")?;
         let result = stmt.query_row(params, Self::row_to_allocation).optional()?;
 
         drop(stmt);
