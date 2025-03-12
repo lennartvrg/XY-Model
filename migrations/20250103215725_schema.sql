@@ -7,6 +7,22 @@ CREATE TABLE IF NOT EXISTS "runs" (
     CONSTRAINT "PK.Runs_ID" PRIMARY KEY (id)
 );
 
+CREATE TABLE IF NOT EXISTS "allocations" (
+    id                  INTEGER     NOT NULL,
+
+    run_id              INTEGER     NOT NULL,
+    dimension           INTEGER     NOT NULL,
+    size                INTEGER     NOT NULL,
+
+    hostname            TEXT            NULL,
+    allocated_at        INTEGER         NULL,
+
+    CONSTRAINT "PK.Allocations_ID" PRIMARY KEY (id),
+    CONSTRAINT "FK.Allocations_RunID" FOREIGN KEY (run_id) REFERENCES "runs" (id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS "IX.Allocations_RunID_Dimension_Size" ON "allocations" (run_id, dimension, size);
+
 CREATE TABLE IF NOT EXISTS "results" (
     id                  INTEGER     NOT NULL,
     run_id              INTEGER     NOT NULL,

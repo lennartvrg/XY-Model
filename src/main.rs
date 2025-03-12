@@ -2,14 +2,13 @@ use clap::Parser;
 use rayon::prelude::*;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
-use gethostname::gethostname;
 
 use crate::algorithm::metropolis::Metropolis;
 use crate::lattice::lattice_1d::Lattice1D;
 use crate::lattice::lattice_2d::Lattice2D;
 use crate::lattice::Lattice;
 use crate::storage::Configuration;
-use crate::utils::range;
+use crate::utils::{hostname, range};
 
 mod algorithm;
 mod analysis;
@@ -21,9 +20,9 @@ mod utils;
 
 const STEPS: usize = 128;
 
-const SWEEPS: usize = 1_000_000;
+const SWEEPS: usize = 1_000_00;
 
-const RESAMPLES: usize = 100_000;
+const RESAMPLES: usize = 100_00;
 
 fn weighted_range() -> impl ParallelIterator<Item = f64> {
     range(0.0..0.75, 16)
@@ -54,7 +53,7 @@ where
 
     // Write console information
     let current = counter.fetch_add(1, Ordering::Relaxed);
-    let _ = println!("[{:?}]\tL{}: {}/{}", gethostname(), size, current, STEPS);
+    let _ = println!("[{}] D{} L{}: {}/{}", hostname(), L::DIM, size, current, STEPS);
 
     // Serialize spins
     let time_boot = start.elapsed().as_millis() - time_mc;
@@ -82,14 +81,14 @@ fn main() -> Result<(), rusqlite::Error> {
 
     // Some debug information for SBATCH
     match std::thread::available_parallelism() {
-        Ok(v) => println!("[{:?}] System has {} threads", gethostname(), v),
-        Err(v) => println!("[{:?}] Could not fetch system thread count: {}", gethostname(), v),
+        Ok(v) => println!("[{}] System has {} threads", hostname(), v),
+        Err(v) => println!("[{}] Could not fetch system thread count: {}", hostname(), v),
     };
 
     // Some debug information for SBATCH
     match std::env::var("RAYON_NUM_THREADS") {
-        Ok(v) => println!("[{:?}] RAYON uses {} threads", gethostname(), v),
-        Err(v) => println!("[{:?}] Could not fetch RAYON thread count: {}", gethostname(), v),
+        Ok(v) => println!("[{}] RAYON uses {} threads", hostname(), v),
+        Err(v) => println!("[{}] Could not fetch RAYON thread count: {}", hostname(), v),
     }
 
     // Fetches or creates the current run
@@ -98,22 +97,16 @@ fn main() -> Result<(), rusqlite::Error> {
         Some(run) => run,
     };
 
-    // Simulate 1D lattice and store results in SQlite database
-    if !args.one.is_empty() {
-        println!("[{:?}] Starting 1D XY model simulations for run {}", gethostname(), run.id);
-        for size in args.one {
-            let configurations = simulate::<Lattice1D, _>(size, range(0.0..2.0, STEPS));
-            storage.insert_results(run.id, size, &configurations)?;
-        }
-    }
+    // Ensure allocations are registered
+    storage.ensure_allocations(run.id, &args.one, &args.two)?;
 
-    // Simulate 1D lattice and store results in SQlite database
-    if !args.two.is_empty() {
-        println!("[{:?}] Starting 2D XY model simulations for run {}", gethostname(), run.id);
-        for size in args.two {
-            let configurations = simulate::<Lattice2D, _>(size, weighted_range());
-            storage.insert_results(run.id, size, &configurations)?;
-        }
+    // While a next allocation is available => process it
+    while let Some((dimension, size)) = storage.next_allocation(run.id, &hostname())? {
+        println!("[{}] Next allocation: D{} L{}", hostname(), dimension, size);
+        storage.insert_results(run.id, size, &match dimension {
+            1 => simulate::<Lattice1D, _>(size, range(0.0..2.0, STEPS)),
+            _ => simulate::<Lattice2D, _>(size, weighted_range()),
+        })?;
     }
     Ok(())
 }
