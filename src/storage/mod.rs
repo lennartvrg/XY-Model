@@ -1,4 +1,3 @@
-use rusqlite::TransactionBehavior::Immediate;
 use rusqlite::{params, Connection, OptionalExtension};
 
 mod types;
@@ -13,6 +12,7 @@ pub struct Storage(Connection);
 impl Storage {
     pub fn connect() -> Result<Self, rusqlite::Error> {
         let conn = Connection::open("output.sqlite")?;
+        conn.pragma_update(None, "synchronous", "NORMAL")?;
         conn.execute_batch(MIGRATION)?;
         Ok(Self(conn))
     }
@@ -23,7 +23,7 @@ impl Storage {
         one: &[usize],
         two: &[usize],
     ) -> Result<(), rusqlite::Error> {
-        let tx = self.0.transaction_with_behavior(Immediate)?;
+        let tx = self.0.transaction()?;
         let mut stmt = tx.prepare(
             "INSERT OR IGNORE INTO allocations (run_id, dimension, size) VALUES ($1, $2, $3)",
         )?;
@@ -46,9 +46,9 @@ impl Storage {
         hostname: &str,
     ) -> Result<Option<(usize, usize)>, rusqlite::Error> {
         let params = (hostname, unix_time().unwrap_or_default(), id);
-        let tx = self.0.transaction_with_behavior(Immediate)?;
+        let tx = self.0.transaction()?;
 
-        let mut stmt = tx.prepare("UPDATE allocations SET hostname = $1, allocated_at = $2 WHERE id IN (SELECT id FROM allocations WHERE run_id = $3 AND hostname IS NULL ORDER BY RANDOM() LIMIT 1) RETURNING *")?;
+        let mut stmt = tx.prepare("UPDATE allocations SET hostname = $1, allocated_at = $2 WHERE id IN (SELECT id FROM allocations WHERE run_id = $3 AND hostname IS NULL ORDER BY size DESC LIMIT 1) RETURNING *")?;
         let result = stmt.query_row(params, Self::row_to_allocation).optional()?;
 
         drop(stmt);
@@ -67,7 +67,7 @@ impl Storage {
     }
 
     pub fn create_run(&mut self) -> Result<Run, rusqlite::Error> {
-        let tx = self.0.transaction_with_behavior(Immediate)?;
+        let tx = self.0.transaction()?;
         let params = (unix_time().unwrap_or_default(),);
 
         let mut stmt = tx.prepare("INSERT INTO runs (created_at) VALUES ($1) RETURNING *")?;
@@ -92,7 +92,7 @@ impl Storage {
         size: usize,
         configurations: &[Configuration],
     ) -> Result<(), rusqlite::Error> {
-        let tx = self.0.transaction_with_behavior(Immediate)?;
+        let tx = self.0.transaction()?;
         {
             let mut stmt = tx.prepare("
                 INSERT INTO results (run_id, dimension, size, temperature, energy, energy_std, energy_tau, energy_sqr, energy_sqr_std, energy_sqr_tau, magnet, magnet_std, magnet_tau, magnet_sqr, magnet_sqr_std, magnet_sqr_tau, specific_heat, specific_heat_std, magnet_suscept, magnet_suscept_std, time_mc, time_boot)
