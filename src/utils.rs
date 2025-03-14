@@ -17,7 +17,11 @@ pub fn host() -> String {
 }
 
 pub fn mean(data: &[f64]) -> f64 {
-    data.iter().sum::<f64>() / data.len() as f64
+    data.iter().sum::<f64>() * (data.len() as f64).recip()
+}
+
+pub fn stddev(data: &[f64], mean: f64) -> f64 {
+    data.iter().map(|x| (x - mean) * (x - mean)).sum::<f64>() * ((data.len() - 1) as f64).recip()
 }
 
 pub fn range(range: Range<f64>, steps: usize) -> impl ParallelIterator<Item = f64> {

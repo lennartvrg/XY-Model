@@ -1,6 +1,6 @@
-use std::cmp::Ordering;
 use crate::analysis::Observable;
 use crate::lattice::Lattice;
+use std::cmp::Ordering;
 
 pub struct Run {
     pub id: i32,

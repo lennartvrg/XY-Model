@@ -26,6 +26,8 @@ const RESAMPLES: usize = 80_000;
 
 const MAX_DEPTH: usize = 2;
 
+const TOTAL: usize = MAX_DEPTH * STEPS;
+
 fn simulate_size<L>(
     counter: Arc<AtomicUsize>,
     size: usize,
@@ -36,7 +38,7 @@ where
     L: Lattice,
 {
     // Initialize lattice
-    let mut lattice = L::new(size, 1.0 / t);
+    let mut lattice = L::new(size, t.recip());
 
     // Perform metropolis_hastings and measure time
     let start = std::time::Instant::now();
@@ -49,7 +51,7 @@ where
 
     // Write console information
     let current = counter.fetch_add(1, Ordering::Relaxed);
-    println!("[{}] D{} L{}: {}/{}", host(), L::DIM, size, current, MAX_DEPTH * STEPS);
+    println!("[{}] D{} L{}: {}/{}", host(), L::DIM, size, current, TOTAL);
 
     // Serialize spins
     let time_boot = start.elapsed().as_millis() - time_mc;
@@ -58,7 +60,7 @@ where
 
 fn simulate<L>(size: usize) -> Vec<Configuration>
 where
-    L: Lattice
+    L: Lattice,
 {
     // Result set and counter
     let mut results = Vec::new();
@@ -68,9 +70,13 @@ where
     let mut range = range(0.0..2.0, STEPS);
     for _ in 0..MAX_DEPTH {
         // Simulate lattice and append results
-        results.append(&mut range.map_init(fastrand::Rng::new, |rng, t| {
-            simulate_size::<L>(counter.clone(), size, rng, t)
-        }).collect::<Vec<_>>());
+        results.append(
+            &mut range
+                .map_init(fastrand::Rng::new, |rng, t| {
+                    simulate_size::<L>(counter.clone(), size, rng, t)
+                })
+                .collect::<Vec<_>>(),
+        );
 
         // Order by magnetic susceptibility
         results.sort_by(|a, b| a.xs.0.total_cmp(&b.xs.0));

@@ -1,4 +1,4 @@
-use crate::utils::mean;
+use crate::utils::{mean, stddev};
 
 pub fn bootstrap(rng: &mut fastrand::Rng, data: &[f64], tau: f64, b: usize) -> (f64, f64) {
     bootstrap_blocked(rng, &thermalize_and_block(data, tau), data.len(), b)
@@ -10,20 +10,19 @@ pub fn bootstrap_blocked(
     a: usize,
     b: usize,
 ) -> (f64, f64) {
-    let recip = (b as f64).recip();
-    let (mut sum, mut sum_sqr) = (0.0, 0.0);
+    let mut resamples = Vec::with_capacity(b);
     for _ in 0..b {
-        let value = resample_blocked(rng, blocked, a);
-        sum += value;
-        sum_sqr += value.powi(2);
+        resamples.push(resample_blocked(rng, blocked, a));
     }
-    (sum * recip, (sum_sqr * recip - (sum * recip).powi(2)).sqrt())
+
+    let mean = mean(&resamples);
+    (mean, stddev(&resamples, mean))
 }
 
 fn resample_blocked(rng: &mut fastrand::Rng, blocked: &[f64], a: usize) -> f64 {
     let mut running = 0.0;
     for _ in 0..a {
-        running += unsafe { *blocked.get_unchecked(rng.usize(0..blocked.len())) };
+        running += *rng.choice(blocked).unwrap_or(&0.0);
     }
     running * (a as f64).recip()
 }
