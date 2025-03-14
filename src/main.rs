@@ -20,9 +20,9 @@ mod utils;
 
 const STEPS: usize = 64;
 
-const SWEEPS: usize = 1_200_000;
+const SWEEPS: usize = 800_000;
 
-const RESAMPLES: usize = 240_000;
+const RESAMPLES: usize = 80_000;
 
 const MAX_DEPTH: usize = 2;
 

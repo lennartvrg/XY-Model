@@ -20,11 +20,6 @@ pub fn mean(data: &[f64]) -> f64 {
     data.iter().sum::<f64>() / data.len() as f64
 }
 
-pub fn stddev(data: &[f64]) -> f64 {
-    let mean = mean(data);
-    data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / data.len() as f64
-}
-
 pub fn range(range: Range<f64>, steps: usize) -> impl ParallelIterator<Item = f64> {
     (1..=steps)
         .into_par_iter()

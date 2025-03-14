@@ -4,7 +4,7 @@
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=4
 #SBATCH --cpus-per-task=64
-#SBATCH --time=06:00:00
+#SBATCH --time=08:00:00
 #SBATCH --partition=batch
 
 export RAYON_NUM_THREADS=${SLURM_CPUS_PER_TASK}

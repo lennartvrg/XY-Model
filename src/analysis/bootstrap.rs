@@ -1,5 +1,4 @@
-use crate::utils::{mean, stddev};
-use wide::f64x4;
+use crate::utils::mean;
 
 pub fn bootstrap(rng: &mut fastrand::Rng, data: &[f64], tau: f64, b: usize) -> (f64, f64) {
     bootstrap_blocked(rng, &thermalize_and_block(data, tau), data.len(), b)
@@ -11,25 +10,22 @@ pub fn bootstrap_blocked(
     a: usize,
     b: usize,
 ) -> (f64, f64) {
-    let mut resamples = Vec::with_capacity(b);
+    let recip = (b as f64).recip();
+    let (mut sum, mut sum_sqr) = (0.0, 0.0);
     for _ in 0..b {
-        resamples.push(resample_blocked(rng, blocked, a));
+        let value = resample_blocked(rng, blocked, a);
+        sum += value;
+        sum_sqr += value.powi(2);
     }
-    (mean(&resamples), stddev(&resamples))
+    (sum * recip, (sum_sqr * recip - (sum * recip).powi(2)).sqrt())
 }
 
 fn resample_blocked(rng: &mut fastrand::Rng, blocked: &[f64], a: usize) -> f64 {
     let mut running = 0.0;
-    for _ in (0..a).step_by(4) {
-        running += f64x4::new([
-            blocked[rng.usize(0..blocked.len())],
-            blocked[rng.usize(0..blocked.len())],
-            blocked[rng.usize(0..blocked.len())],
-            blocked[rng.usize(0..blocked.len())],
-        ])
-        .reduce_add();
+    for _ in 0..a {
+        running += unsafe { *blocked.get_unchecked(rng.usize(0..blocked.len())) };
     }
-    running / a as f64
+    running * (a as f64).recip()
 }
 
 pub fn thermalize_and_block(data: &[f64], tau: f64) -> Vec<f64> {
