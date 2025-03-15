@@ -24,8 +24,12 @@ pub fn stddev(data: &[f64], mean: f64) -> f64 {
     data.iter().map(|x| (x - mean) * (x - mean)).sum::<f64>() * ((data.len() - 1) as f64).recip()
 }
 
-pub fn range(range: Range<f64>, steps: usize) -> impl ParallelIterator<Item = f64> {
-    (1..=steps)
-        .into_par_iter()
-        .map(move |i| range.start + i as f64 * (range.end - range.start) / steps as f64)
+pub fn range(range: Range<f64>, steps: usize) -> (impl ParallelIterator<Item = f64>, f64) {
+    let stride = (range.end - range.start) / steps as f64;
+    (
+        (1..=steps)
+            .into_par_iter()
+            .map(move |i| range.start + i as f64 * stride),
+        stride,
+    )
 }

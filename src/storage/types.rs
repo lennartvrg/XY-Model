@@ -41,7 +41,7 @@ impl Configuration {
         }
     }
 
-    pub fn temp_cmp(a: &Configuration, b: &Configuration) -> Ordering {
-        a.temperature.total_cmp(&b.temperature)
+    pub fn cmp(a: &&Configuration, b: &&Configuration) -> Ordering {
+        a.xs.0.total_cmp(&b.xs.0)
     }
 }

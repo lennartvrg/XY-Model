@@ -131,8 +131,9 @@ impl Storage {
                 ])?;
             }
 
+            let params = params![unix_time().unwrap_or_default(), id, dimension, size];
             let mut stmt = tx.prepare("UPDATE allocations SET finished_at = $1 WHERE run_id = $2 AND dimension = $3 AND size = $4 AND allocated_at NOT NULL")?;
-            stmt.execute(params![unix_time().unwrap_or_default(), id, dimension, size])?;
+            stmt.execute(params)?;
         }
         tx.commit()
     }

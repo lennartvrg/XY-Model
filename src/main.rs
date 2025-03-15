@@ -67,7 +67,7 @@ where
     let counter = Arc::new(AtomicUsize::new(1));
 
     // Create initial range and loop trough depth
-    let mut range = range(0.0..2.0, STEPS);
+    let (mut range, mut stride) = range(0.0..2.0, STEPS);
     for _ in 0..MAX_DEPTH {
         // Simulate lattice and append results
         results.append(
@@ -78,27 +78,19 @@ where
                 .collect::<Vec<_>>(),
         );
 
-        // Order by magnetic susceptibility
-        results.sort_by(|a, b| a.xs.0.total_cmp(&b.xs.0));
-        let top = results.iter().rev().take(5).cloned().collect::<Vec<_>>();
-
-        // Get the lower bound of the next range
-        let Some(lower) = top.iter().min_by(|a, b| Configuration::temp_cmp(a, b)) else {
-            break;
-        };
-
-        // Get the upper bound of the next range
-        let Some(upper) = top.iter().max_by(|a, b| Configuration::temp_cmp(a, b)) else {
+        // Get top magnetic susceptibility
+        let Some(cfg) = results.iter().max_by(Configuration::cmp) else {
             break;
         };
 
         // Generate next range
-        range = utils::range(lower.temperature..upper.temperature, STEPS);
+        (range, stride) = utils::range(
+            (cfg.temperature - 1.5 * stride)..(cfg.temperature + 1.5 * stride),
+            STEPS,
+        );
     }
 
     // Order by temperature and remove duplicates
-    results.sort_by(Configuration::temp_cmp);
-    results.dedup_by(|a, b| a.temperature.eq(&b.temperature));
     results
 }
 
