@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS "allocations" (
     dimension           INTEGER     NOT NULL,
     size                INTEGER     NOT NULL,
 
-    hostname            TEXT            NULL,
+    node                TEXT            NULL,
+    process             INTEGER         NULL,
     allocated_at        INTEGER         NULL,
 
     CONSTRAINT "PK.Allocations_ID" PRIMARY KEY (id),
@@ -59,6 +60,6 @@ CREATE TABLE IF NOT EXISTS "results" (
     CONSTRAINT "FK.Results_RunID" FOREIGN KEY (run_id) REFERENCES "runs" (id)
 );
 
-CREATE INDEX IF NOT EXISTS "IX.Results_RunID_Dimension" ON "results" (run_id, dimension);
+CREATE UNIQUE INDEX IF NOT EXISTS "IX.Results_RunID_Dimension_Size_Temperature" ON "results" (run_id, dimension, size, temperature);
 
 COMMIT;

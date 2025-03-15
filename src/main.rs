@@ -18,13 +18,13 @@ mod lattice;
 mod storage;
 mod utils;
 
-const STEPS: usize = 64;
+const STEPS: usize = 32;
 
 const SWEEPS: usize = 800_000;
 
-const RESAMPLES: usize = 80_000;
+const RESAMPLES: usize = 160_000;
 
-const MAX_DEPTH: usize = 2;
+const MAX_DEPTH: usize = 3;
 
 const TOTAL: usize = MAX_DEPTH * STEPS;
 
@@ -129,7 +129,7 @@ fn main() -> Result<(), rusqlite::Error> {
     storage.ensure_allocations(run.id, &args.one, &args.two)?;
 
     // While a next allocation is available => process it
-    while let Some((dimension, size)) = storage.next_allocation(run.id, &host())? {
+    while let Some((dimension, size)) = storage.next_allocation(run.id)? {
         println!("[{}] Next allocation: D{} L{}", host(), dimension, size);
         let configurations = match dimension {
             1 => simulate::<Lattice1D>(size),

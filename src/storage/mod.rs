@@ -1,7 +1,9 @@
 use rusqlite::{params, Connection, OptionalExtension};
+use std::str::FromStr;
 
 mod types;
 
+use crate::utils;
 use crate::utils::unix_time;
 pub use types::*;
 
@@ -40,15 +42,17 @@ impl Storage {
         tx.commit()
     }
 
-    pub fn next_allocation(
-        &mut self,
-        id: i32,
-        hostname: &str,
-    ) -> Result<Option<(usize, usize)>, rusqlite::Error> {
-        let params = (hostname, unix_time().unwrap_or_default(), id);
+    pub fn next_allocation(&mut self, id: i32) -> Result<Option<(usize, usize)>, rusqlite::Error> {
+        let node = std::env::var("SLURMD_NODENAME").unwrap_or_else(|_| utils::host());
+        let process = match std::env::var("SLURM_PROCID").map(|x| u32::from_str(&x)) {
+            Ok(Ok(id)) => id,
+            _ => std::process::id(),
+        };
+
+        let params = (node, process, unix_time().unwrap_or_default(), id);
         let tx = self.0.transaction()?;
 
-        let mut stmt = tx.prepare("UPDATE allocations SET hostname = $1, allocated_at = $2 WHERE id IN (SELECT id FROM allocations WHERE run_id = $3 AND hostname IS NULL ORDER BY size DESC LIMIT 1) RETURNING *")?;
+        let mut stmt = tx.prepare("UPDATE allocations SET node = $1, process = $2, allocated_at = $3 WHERE id IN (SELECT id FROM allocations WHERE run_id = $4 AND node IS NULL ORDER BY size DESC LIMIT 1) RETURNING *")?;
         let result = stmt.query_row(params, Self::row_to_allocation).optional()?;
 
         drop(stmt);
@@ -96,7 +100,7 @@ impl Storage {
         {
             let mut stmt = tx.prepare("
                 INSERT INTO results (run_id, dimension, size, temperature, energy, energy_std, energy_tau, energy_sqr, energy_sqr_std, energy_sqr_tau, magnet, magnet_std, magnet_tau, magnet_sqr, magnet_sqr_std, magnet_sqr_tau, specific_heat, specific_heat_std, magnet_suscept, magnet_suscept_std, time_mc, time_boot)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22) ON CONFLICT DO NOTHING
             ")?;
 
             for cfg in configurations {
