@@ -16,7 +16,9 @@ CREATE TABLE IF NOT EXISTS "allocations" (
 
     node                TEXT            NULL,
     process             INTEGER         NULL,
+    
     allocated_at        INTEGER         NULL,
+    finished_at         INTEGER         NULL,
 
     CONSTRAINT "PK.Allocations_ID" PRIMARY KEY (id),
     CONSTRAINT "FK.Allocations_RunID" FOREIGN KEY (run_id) REFERENCES "runs" (id)

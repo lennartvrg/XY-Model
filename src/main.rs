@@ -24,7 +24,7 @@ const SWEEPS: usize = 800_000;
 
 const RESAMPLES: usize = 160_000;
 
-const MAX_DEPTH: usize = 3;
+const MAX_DEPTH: usize = 2;
 
 const TOTAL: usize = MAX_DEPTH * STEPS;
 
@@ -80,7 +80,7 @@ where
 
         // Order by magnetic susceptibility
         results.sort_by(|a, b| a.xs.0.total_cmp(&b.xs.0));
-        let top = results.iter().rev().take(8).cloned().collect::<Vec<_>>();
+        let top = results.iter().rev().take(5).cloned().collect::<Vec<_>>();
 
         // Get the lower bound of the next range
         let Some(lower) = top.iter().min_by(|a, b| Configuration::temp_cmp(a, b)) else {
@@ -98,7 +98,7 @@ where
 
     // Order by temperature and remove duplicates
     results.sort_by(Configuration::temp_cmp);
-    results.dedup_by(|a, b| a.xs.0.eq(&b.xs.0));
+    results.dedup_by(|a, b| a.temperature.eq(&b.temperature));
     results
 }
 
@@ -135,7 +135,7 @@ fn main() -> Result<(), rusqlite::Error> {
             1 => simulate::<Lattice1D>(size),
             _ => simulate::<Lattice2D>(size),
         };
-        storage.insert_results(run.id, size, &configurations)?;
+        storage.insert_results(run.id, dimension, size, &configurations)?;
     }
     Ok(())
 }

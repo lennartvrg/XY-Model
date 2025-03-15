@@ -93,6 +93,7 @@ impl Storage {
     pub fn insert_results(
         &mut self,
         id: i32,
+        dimension: usize,
         size: usize,
         configurations: &[Configuration],
     ) -> Result<(), rusqlite::Error> {
@@ -129,6 +130,9 @@ impl Storage {
                     cfg.time_boot as i32
                 ])?;
             }
+
+            let mut stmt = tx.prepare("UPDATE allocations SET finished_at = $1 WHERE run_id = $2 AND dimension = $3 AND size = $4 AND allocated_at NOT NULL")?;
+            stmt.execute(params![unix_time().unwrap_or_default(), id, dimension, size])?;
         }
         tx.commit()
     }
