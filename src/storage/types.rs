@@ -41,6 +41,10 @@ impl Configuration {
         }
     }
 
+    pub fn relevant_tmp(x: &&Configuration) -> bool {
+        x.temperature >= 0.80 && x.temperature <= 1.2
+    }
+
     pub fn cmp(a: &&Configuration, b: &&Configuration) -> Ordering {
         a.xs.0.total_cmp(&b.xs.0)
     }

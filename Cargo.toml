@@ -6,8 +6,10 @@ resolver = "2"
 
 [profile.release]
 lto = true
-debug = true
 strip = false
+
+[profile.release.package."*"]
+opt-level = 3
 
 [dependencies]
 fastrand = { version = "2.3.0" }

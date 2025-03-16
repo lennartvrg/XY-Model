@@ -18,11 +18,11 @@ mod lattice;
 mod storage;
 mod utils;
 
-const STEPS: usize = 32;
+const STEPS: usize = 64;
 
-const SWEEPS: usize = 800_000;
+const SWEEPS: usize = 1_000_000;
 
-const RESAMPLES: usize = 160_000;
+const RESAMPLES: usize = 200_000;
 
 const MAX_DEPTH: usize = 2;
 
@@ -67,7 +67,7 @@ where
     let counter = Arc::new(AtomicUsize::new(1));
 
     // Create initial range and loop trough depth
-    let (mut range, mut stride) = range(0.0..2.0, STEPS);
+    let (mut range, mut stride) = range(0.0..3.0, STEPS);
     for _ in 0..MAX_DEPTH {
         // Simulate lattice and append results
         results.append(
@@ -79,13 +79,13 @@ where
         );
 
         // Get top magnetic susceptibility
-        let Some(cfg) = results.iter().max_by(Configuration::cmp) else {
+        let Some(cfg) = results.iter().filter(Configuration::relevant_tmp).max_by(Configuration::cmp) else {
             break;
         };
 
         // Generate next range
         (range, stride) = utils::range(
-            (cfg.temperature - 1.5 * stride)..(cfg.temperature + 1.5 * stride),
+            (cfg.temperature - 3.0 * stride)..(cfg.temperature + 3.0 * stride),
             STEPS,
         );
     }
