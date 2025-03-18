@@ -28,9 +28,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS "IX.Allocations_RunID_Dimension_Size" ON "allo
 
 CREATE TABLE IF NOT EXISTS "results" (
     id                  INTEGER     NOT NULL,
+
     run_id              INTEGER     NOT NULL,
     dimension           INTEGER     NOT NULL,
-
     size                INTEGER     NOT NULL,
     temperature         REAL        NOT NULL,
 
@@ -59,9 +59,27 @@ CREATE TABLE IF NOT EXISTS "results" (
     time_boot           INTEGER     NOT NULL,
 
     CONSTRAINT "PK.Results_ID" PRIMARY KEY (id),
-    CONSTRAINT "FK.Results_RunID" FOREIGN KEY (run_id) REFERENCES "runs" (id)
+    CONSTRAINT "FK.Results_RunID" FOREIGN KEY (run_id) REFERENCES "runs" (id),
+    CONSTRAINT "FK.Results_RunID_Dimension_Size" FOREIGN KEY (run_id, dimension, size) REFERENCES "allocations" (run_id, dimension, size)
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS "IX.Results_RunID_Dimension_Size_Temperature" ON "results" (run_id, dimension, size, temperature);
+
+CREATE TABLE IF NOT EXISTS "vortices" (
+    id                  INTEGER     NOT NULL,
+
+    run_id              INTEGER     NOT NULL,
+    dimension           INTEGER     NOT NULL,
+    size                INTEGER     NOT NULL,
+
+    temperature         REAL        NOT NULL,
+    spins               TEXT        NOT NULL,
+
+    CONSTRAINT "PK.Vortices_ID" PRIMARY KEY (id),
+    CONSTRAINT "FK.Vortices_RunID" FOREIGN KEY (run_id) REFERENCES "runs" (id),
+    CONSTRAINT "FK.Vortices_RunID_Dimension_Size" FOREIGN KEY (run_id, dimension, size) REFERENCES "allocations" (run_id, dimension, size)
+);
+
+CREATE INDEX IF NOT EXISTS "IX.Vortices_RunID_Dimension_Size" ON "vortices" (run_id, dimension, size);
 
 COMMIT;

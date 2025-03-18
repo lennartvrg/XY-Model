@@ -25,12 +25,18 @@ impl Storage {
     pub fn ensure_allocations(
         &mut self,
         id: i32,
+        vortices: Option<usize>,
         one: &[usize],
         two: &[usize],
     ) -> Result<(), rusqlite::Error> {
         // Prepares the transaction and statement
         let tx = self.0.transaction()?;
         let mut stmt = tx.prepare("INSERT INTO allocations (run_id, dimension, size) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING")?;
+
+        // Ensure 2D lattice size is registered for vortex development
+        if let Some(size) = vortices {
+            stmt.execute(params![id, 2, size])?;
+        }
 
         // Ensure all 1D lattice sizes are registered
         for val in one {
@@ -50,7 +56,7 @@ impl Storage {
     /// Queries for the next unassigned allocation and returns the corresponding lattice size and
     /// dimensionality. Returns none if there are no outstanding allocations.
     pub fn next_allocation(&mut self, id: i32) -> Result<Option<(usize, usize)>, rusqlite::Error> {
-        // Retrieve nodename and process id
+        // Retrieve hostname and process id
         let node = std::env::var("SLURMD_NODENAME").unwrap_or_else(|_| utils::host());
         let process = match std::env::var("SLURM_PROCID").map(|x| u32::from_str(&x)) {
             Ok(Ok(id)) => id,
@@ -84,26 +90,34 @@ impl Storage {
         stmt.query_row(params, Self::row_to_run).optional()
     }
 
+    /// Creates a new run and returns it.
     pub fn create_run(&mut self) -> Result<Run, rusqlite::Error> {
+        // Prepare transaction and parameters
         let tx = self.0.transaction()?;
         let params = (utils::unix_time(),);
 
+        // Insert run and convert to run struct
         let mut stmt = tx.prepare("INSERT INTO runs (created_at) VALUES ($1) RETURNING *")?;
         let result = stmt.query_row(params, Self::row_to_run)?;
 
+        // Commit transaction
         drop(stmt);
         tx.commit()?;
         Ok(result)
     }
 
+    /// Converts the SQL row into a run.
     fn row_to_run(row: &rusqlite::Row) -> rusqlite::Result<Run> {
         Ok(Run { id: row.get(0)? })
     }
 
+    /// Converts the SQL row into the lattice size and dimensionality.
     fn row_to_allocation(row: &rusqlite::Row) -> rusqlite::Result<(usize, usize)> {
         Ok((row.get(2)?, row.get(3)?))
     }
 
+    /// Inserts the result configurations into the SQLite database. Takes the run id, the lattice
+    /// size and dimensionality for which these configurations were generated.
     pub fn insert_results(
         &mut self,
         id: i32,
@@ -111,43 +125,68 @@ impl Storage {
         size: usize,
         configurations: &[Configuration],
     ) -> Result<(), rusqlite::Error> {
+        // Prepare transaction and statment
         let tx = self.0.transaction()?;
-        {
-            let mut stmt = tx.prepare("
-                INSERT INTO results (run_id, dimension, size, temperature, energy, energy_std, energy_tau, energy_sqr, energy_sqr_std, energy_sqr_tau, magnet, magnet_std, magnet_tau, magnet_sqr, magnet_sqr_std, magnet_sqr_tau, specific_heat, specific_heat_std, magnet_suscept, magnet_suscept_std, time_mc, time_boot)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22) ON CONFLICT DO NOTHING
-            ")?;
+        let mut stmt = tx.prepare("
+            INSERT INTO results (run_id, dimension, size, temperature, energy, energy_std, energy_tau, energy_sqr, energy_sqr_std, energy_sqr_tau, magnet, magnet_std, magnet_tau, magnet_sqr, magnet_sqr_std, magnet_sqr_tau, specific_heat, specific_heat_std, magnet_suscept, magnet_suscept_std, time_mc, time_boot)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22) ON CONFLICT DO NOTHING
+        ")?;
 
-            for cfg in configurations {
-                stmt.execute(rusqlite::params![
-                    id,
-                    cfg.dimension as i32,
-                    size as i32,
-                    cfg.temperature,
-                    cfg.energy.mean,
-                    cfg.energy.stddev,
-                    cfg.energy.tau,
-                    cfg.energy.sqr_mean,
-                    cfg.energy.sqr_stddev,
-                    cfg.energy.sqr_tau,
-                    cfg.magnetization.mean,
-                    cfg.magnetization.stddev,
-                    cfg.magnetization.tau,
-                    cfg.magnetization.sqr_mean,
-                    cfg.magnetization.sqr_stddev,
-                    cfg.magnetization.sqr_tau,
-                    cfg.cv.0,
-                    cfg.cv.1,
-                    cfg.xs.0,
-                    cfg.xs.1,
-                    cfg.time_mc as i32,
-                    cfg.time_boot as i32
-                ])?;
-            }
-
-            let mut stmt = tx.prepare("UPDATE allocations SET finished_at = $1 WHERE run_id = $2 AND dimension = $3 AND size = $4 AND allocated_at NOT NULL")?;
-            stmt.execute(params![utils::unix_time(), id, dimension, size])?;
+        // Insert configurations
+        for cfg in configurations {
+            stmt.execute(rusqlite::params![
+                id,
+                cfg.dimension as i32,
+                size as i32,
+                cfg.temperature,
+                cfg.energy.mean,
+                cfg.energy.stddev,
+                cfg.energy.tau,
+                cfg.energy.sqr_mean,
+                cfg.energy.sqr_stddev,
+                cfg.energy.sqr_tau,
+                cfg.magnetization.mean,
+                cfg.magnetization.stddev,
+                cfg.magnetization.tau,
+                cfg.magnetization.sqr_mean,
+                cfg.magnetization.sqr_stddev,
+                cfg.magnetization.sqr_tau,
+                cfg.cv.0,
+                cfg.cv.1,
+                cfg.xs.0,
+                cfg.xs.1,
+                cfg.time_mc as i32,
+                cfg.time_boot as i32
+            ])?;
         }
+        drop(stmt);
+
+        // Set allocation to finished
+        let mut stmt = tx.prepare("UPDATE allocations SET finished_at = $1 WHERE run_id = $2 AND dimension = $3 AND size = $4 AND allocated_at NOT NULL")?;
+        stmt.execute(params![utils::unix_time(), id, dimension, size])?;
+
+        drop(stmt);
+        tx.commit()
+    }
+
+    pub fn insert_vortices(
+        &mut self,
+        id: i32,
+        dimension: usize,
+        size: usize,
+        vortices: &[(f64, String)]
+    ) -> Result<(), rusqlite::Error> {
+        // Prepare transaction and statement
+        let tx = self.0.transaction()?;
+        let mut stmt = tx.prepare("INSERT INTO vortices (run_id, dimension, size, temperature, spins) VALUES ($1, $2, $3, $4, $5)")?;
+
+        // Insert vortices
+        for (temperature, spins) in vortices {
+            stmt.execute(params![id, dimension, size, temperature, spins])?;
+        }
+
+        // Commit transaction
+        drop(stmt);
         tx.commit()
     }
 }

@@ -1,5 +1,5 @@
 use crate::lattice::Lattice;
-use rustfft::num_traits::Inv;
+use std::ops::Index;
 use wide::{f64x2, f64x4};
 
 pub struct Lattice2D {
@@ -20,8 +20,12 @@ impl Lattice for Lattice2D {
         }
     }
 
+    fn set_beta(&mut self, beta: f64) {
+        self.beta = beta;
+    }
+
     fn temperature(&self) -> f64 {
-        self.beta.inv()
+        self.beta.recip()
     }
 
     fn sites(&self) -> usize {
@@ -35,17 +39,12 @@ impl Lattice for Lattice2D {
     fn energy(&self) -> f64 {
         let mut result = 0.0;
         for i in (0..self.sites()).step_by(2) {
-            let old = f64x4::new([
-                self.spins[i],
-                self.spins[i],
-                self.spins[i + 1],
-                self.spins[i + 1],
-            ]);
+            let old = f64x4::new([self[i], self[i], self[i + 1], self[i + 1]]);
             let neighbours = f64x4::new([
-                self.spins[(i + 1) % self.sites()],
-                self.spins[(i + self.length) % self.sites()],
-                self.spins[(i + 2) % self.sites()],
-                self.spins[(i + 1 + self.length) % self.sites()],
+                self[(i + 1) % self.sites()],
+                self[(i + self.length) % self.sites()],
+                self[(i + 2) % self.sites()],
+                self[(i + 1 + self.length) % self.sites()],
             ]);
             result += (old - neighbours).cos().reduce_add();
         }
@@ -54,13 +53,13 @@ impl Lattice for Lattice2D {
 
     fn energy_diff(&self, i: usize, angle: f64) -> f64 {
         let neighbours = f64x4::from([
-            self.spins[(i + 1) % self.sites()],
-            self.spins[(i + self.sites() - 1) % self.sites()],
-            self.spins[(i + self.length) % self.sites()],
-            self.spins[(i + self.sites() - self.length) % self.sites()],
+            self[(i + 1) % self.sites()],
+            self[(i + self.sites() - 1) % self.sites()],
+            self[(i + self.length) % self.sites()],
+            self[(i + self.sites() - self.length) % self.sites()],
         ]);
 
-        let old = f64x4::splat(self.spins[i]);
+        let old = f64x4::splat(self[i]);
         let before = (old - neighbours).cos().reduce_add();
 
         let new = f64x4::splat(angle);
@@ -70,7 +69,7 @@ impl Lattice for Lattice2D {
     }
 
     fn magnetization_diff(&self, i: usize, angle: f64) -> (f64, f64) {
-        let (sin, cos) = f64x2::from([angle, std::f64::consts::PI + self.spins[i]]).sin_cos();
+        let (sin, cos) = f64x2::from([angle, std::f64::consts::PI + self[i]]).sin_cos();
         (cos.reduce_add(), sin.reduce_add())
     }
 
@@ -78,7 +77,15 @@ impl Lattice for Lattice2D {
         f64::min(1.0, f64::exp(-self.beta * diff_energy))
     }
 
-    fn spins(&self) -> &[f64] {
-        &self.spins
+    fn serialize(&self) -> String {
+        serde_json::to_string(&self.spins).unwrap()
+    }
+}
+
+impl Index<usize> for Lattice2D {
+    type Output = f64;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.spins[index]
     }
 }

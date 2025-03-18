@@ -10,6 +10,10 @@ pub struct Arguments {
     #[arg(short = 'r', long = "run_id")]
     pub run_id: Option<i32>,
 
+    /// Enables the recording of the development of vortices on the lattice
+    #[arg(short = 'v', long = "vortices")]
+    pub vortices: Option<usize>,
+
     /// The lengths of the 1D lattice sides which will be simulated.
     #[arg(short = 'o', long = "one", num_args = 0..)]
     pub one: Vec<usize>,

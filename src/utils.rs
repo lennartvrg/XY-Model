@@ -32,12 +32,21 @@ pub fn stddev(data: &[f64], mean: f64) -> f64 {
 }
 
 /// Splits the given range into steps and returns a parallel iterator and the step size.
-pub fn range(range: Range<f64>, steps: usize) -> (impl ParallelIterator<Item = f64>, f64) {
+pub fn range_par(range: Range<f64>, steps: usize) -> (impl ParallelIterator<Item = f64>, f64) {
     let stride = (range.end - range.start) / steps as f64;
     (
         (1..=steps)
             .into_par_iter()
             .map(move |i| range.start + i as f64 * stride),
+        stride,
+    )
+}
+
+/// Splits the given range into steps and returns an iterator and the step size.
+pub fn range(range: Range<f64>, steps: usize) -> (impl DoubleEndedIterator<Item = f64>, f64) {
+    let stride = (range.end - range.start) / steps as f64;
+    (
+        (1..=steps).map(move |i| range.start + i as f64 * stride),
         stride,
     )
 }

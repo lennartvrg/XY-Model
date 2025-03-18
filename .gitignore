@@ -1,7 +1,7 @@
-*.sqlite
-*.sqlite-journal
+*.sqlite*
 figures/**/*.pdf
 figures/**/*.png
+figures/**/*.mp4
 
 # Created by https://www.toptal.com/developers/gitignore/api/rust,intellij,visualstudiocode,jupyternotebooks,python
 # Edit at https://www.toptal.com/developers/gitignore?templates=rust,intellij,visualstudiocode,jupyternotebooks,python
