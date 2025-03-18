@@ -6,7 +6,7 @@ pub struct Run {
     pub id: i32,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Configuration {
     pub dimension: usize,
     pub temperature: f64,

@@ -4,45 +4,32 @@ use wide::f64x4;
 pub mod lattice_1d;
 pub mod lattice_2d;
 
-pub trait Lattice {
-    /**
-     * The dimensions of the lattice
-     */
+pub use lattice_1d::Lattice1D;
+pub use lattice_2d::Lattice2D;
+
+pub trait Lattice: Sized {
+    /// The dimensionality of the lattice.
     const DIM: usize;
 
-    /**
-     * Creates a new lattice
-     */
+    /// Instantiates a new lattice with side length and beta
     fn new(length: usize, beta: f64) -> Self;
 
-    /**
-     * Temperature of the lattice
-     */
+    /// Returns the temperature of the lattice
     fn temperature(&self) -> f64;
 
-    /**
-     * Number of sites on the lattice
-     */
+    /// Returns the number of lattice sites.
     fn sites(&self) -> usize;
 
-    /**
-     * Flips the spin at index i.
-     */
+    /// Updates the angle of the spin at index i.
     fn update_angle(&mut self, i: usize, angle: f64);
 
-    /**
-     * Calculates the total energy of the lattice.
-     */
+    /// Calculates the total energy of the lattice.
     fn energy(&self) -> f64;
 
-    /**
-     * Calculates the energy difference if one was to flip the spin at index i.
-     */
+    /// Calculates the energy difference if one was to flip the spin at index i.
     fn energy_diff(&self, i: usize, angle: f64) -> f64;
 
-    /**
-     * Calculates the total magnetization of the lattice.
-     */
+    /// Calculates the total magnetization of the lattice.
     fn magnetization(&self) -> (f64, f64) {
         let (mut cos, mut sin) = (0.0, 0.0);
         for i in (0..self.sites()).step_by(4) {

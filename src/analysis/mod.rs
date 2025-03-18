@@ -4,7 +4,8 @@ mod bootstrap;
 pub use autocorrelation::autocorrelation;
 pub use bootstrap::bootstrap;
 
-#[derive(Clone, Debug)]
+/// Holds the mean, stddev, tau, mean_sqr, stddev_sqr and tau_sqr values.
+#[derive(Clone)]
 pub struct Observable {
     pub mean: f64,
     pub stddev: f64,
@@ -16,6 +17,7 @@ pub struct Observable {
 }
 
 impl Observable {
+    /// Instantiates a new observable with the given values.
     pub const fn new(
         mean: f64,
         stddev: f64,
@@ -35,6 +37,9 @@ impl Observable {
     }
 }
 
+/// Performs the complete bootstrap analysis and returns the mean, stddev, tau, mean_sqr, stddev_sqr
+/// and tau_sqr observables. The bootstrap analysis uses the data length as parameter A and the
+/// resamples argument as parameter B.
 pub fn complete(rng: &mut fastrand::Rng, data: Vec<f64>, resamples: usize) -> Observable {
     let data_sqr = data.iter().map(|x| x.powi(2)).collect::<Vec<f64>>();
 

@@ -1,6 +1,7 @@
+use crate::algorithm::Algorithm;
 use crate::lattice::Lattice;
 
-pub trait Metropolis {
+pub trait Metropolis: Algorithm {
     fn sweep(&mut self, rng: &mut fastrand::Rng) -> (f64, (f64, f64));
 
     fn metropolis_hastings(
@@ -8,6 +9,15 @@ pub trait Metropolis {
         rng: &mut fastrand::Rng,
         sweeps: usize,
     ) -> (Vec<f64>, Vec<f64>);
+}
+
+impl<T> Algorithm for T
+where
+    T: Lattice + Metropolis,
+{
+    fn simulate(&mut self, rng: &mut fastrand::Rng, sweeps: usize) -> (Vec<f64>, Vec<f64>) {
+        self.metropolis_hastings(rng, sweeps)
+    }
 }
 
 impl<T> Metropolis for T
