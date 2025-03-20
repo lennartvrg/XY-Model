@@ -115,7 +115,7 @@ where
 
     // Iterate over temperature from hot to cold
     let mut results = Vec::with_capacity(1800);
-    for t in range(0.1..1.5, 90).0.rev() {
+    for t in range(0.05..1.5, 90).0.rev() {
         // Update the beta value and thermalize
         println!("[{}] D{} L{}: Vortices for t={:.4}", host(), L::DIM, size, t);
         lattice.set_beta(t.recip());
