@@ -1,0 +1,19 @@
+\section{Numerical Methods}
+\subsection{Monte Carlo Metropolis-Hastings Algorithm}
+
+\begin{enumerate}
+	\item Calculate $E$ and $M$ for the initial lattice configuration where $\theta_i = 0$ at every site.
+	\item Perform a lattice sweep by iterating over all lattice sites. For every site $i$ do:
+	\begin{enumerate}
+		\item Propose a new angle $\theta_i \in [0,2\pi)$ from a uniform distribution.
+		\item Calculate $\Delta H = \Delta E$ and $\Delta M$ for the proposed new state.
+		\item Accept or reject state with propability $P = \min{(1, \exp{(-J\Delta H)})}$
+	\end{enumerate}
+	\item Update the observables $E \mathrel{{+}{=}} \Delta E$ and $M \mathrel{{+}{=}} \Delta M$ and add them to the result set.
+	\item Repeat from 2. for a total of $N$ sweeps.
+\end{enumerate}
+
+\subsection{Bootstrap Analysis}
+Since the Metropolis-Hastings algorithm scales with the number of lattices sites, it is computationally impractical to run the Metropolis-Hastings algorithm for very long times. To resolve this, one might use bootstrap sampling to obtain more measurements than were simulated. 
+
+\subsection{Implementation}
