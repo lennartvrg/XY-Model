@@ -8,17 +8,21 @@
 \usepackage{siunitx}
 \usepackage{listings}
 \usepackage{xcolor}
-\sisetup{per-mode=fraction,separate-uncertainty}
+\usepackage[round]{natbib}   % omit 'round' option if you prefer square brackets
+\bibliographystyle{plainnat}
+\sisetup{per-mode=fraction}
 
 % optional packages, yet recommended
 \usepackage{amsmath,amssymb,amsthm} 
 \usepackage{subcaption}
+\usepackage{hyperref}
 \usepackage{cleveref}
 \usepackage{microtype}
 \usepackage{booktabs}
 \usepackage{csquotes}
 \usepackage{graphicx}
-\usepackage{float}
+\usepackage[]{float}
+\usepackage[section]{placeins}
 \usepackage{derivative}
 
 % configure some packages and macros
@@ -53,6 +57,6 @@
 	\pagenumbering{Roman}
 	\listoffigures
     \clearpage
-	\listoftables
+	\bibliography{refs}
 	
 \end{document}

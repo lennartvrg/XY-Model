@@ -1,5 +1,5 @@
 \section{Numerical Methods}
-\subsection{Monte Carlo Metropolis-Hastings Algorithm}
+\subsection{Monte Carlo Metropolis-Hastings Algorithm}\label{sec:metropolis_hastings}
 
 \begin{enumerate}
 	\item Calculate $E$ and $M$ for the initial lattice configuration.
@@ -13,7 +13,7 @@
 	\item Repeat from 2. for a total of $N$ sweeps.
 \end{enumerate}
 
-\subsection{Bootstrap Analysis}
+\subsection{Bootstrap Analysis}\label{sec:bootstrap}
 Since the Metropolis-Hastings algorithm scales with the number of lattices sites, it is computationally impractical to run the Metropolis-Hastings algorithm for very long times. To resolve this, one might use bootstrap sampling to obtain more measurements than were simulated. 
 
 \subsection{Implementation}
