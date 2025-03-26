@@ -1,7 +1,8 @@
 \section{Introduction}
-The perhaps most well known model for the magnetization of lattice structures is the Ising spin model. It describes the total magnetization of a lattice as the superposition of all the spins $\sigma_i = \pm 1$ on the lattice.
+The perhaps most well known model for the magnetization of lattice structures is the Ising spin model. It describes the total magnetization of a lattice as the superposition of all spins $\sigma_i = \pm 1$ on the lattice.
 
-One can now go and generalize the problem not only to a $\mathbb{Z}_2$ symmetry but to a continous $U(2)$ symmetry. This model is called the XY model and describes the spins as two dimensional vectors on the unit circle
+\paragraph{XY model}
+One can now go and generalize the problem from a $\mathbb{Z}_2$ symmetry to a continous $U(2)$ symmetry. This model is called the XY model and describes the spins as two dimensional vectors on the unit circle
 \begin{equation}\label{eq:hamiltonian}
 	\sigma_i = \begin{pmatrix}
 		\cos{\theta_i} \\ \sin{\theta_i}
@@ -9,10 +10,13 @@ One can now go and generalize the problem not only to a $\mathbb{Z}_2$ symmetry 
 \end{equation}
 parametrized by the angle $\theta_i \in [0,2\pi)$. The Hamiltonian for this system is thus given as
 \begin{equation}\label{eq:partition}
-	H = - \sum_{\langle i,j \rangle}{s_i \cdot s_j} = - \sum_{\langle i,j \rangle}{\cos{(\Delta \theta)}}
+	H = -J \sum_{\langle i,j \rangle}{s_i \cdot s_j} = -J \sum_{\langle i,j \rangle}{\cos{(\Delta \theta)}}
 \end{equation}
-where $\Delta \theta = \theta_i - \theta_j$ is the angle between two spins. The partition sum for such a system is given by
+where $\Delta \theta = \theta_i - \theta_j$ is the angle between two spins and $J$ the interaction strength. The $\langle i,j \rangle$ notation is used to indicate a nearest neighbour approximation. The partition sum for such a system is given by
 \begin{equation}
 	Z = \sum{\exp{(-\beta H)}}
 \end{equation}
-where $\beta = \frac{1}{k_B T}$.
+where $\beta = \frac{1}{k_B T}$.  The constants $\beta$ and $J$ will from now on, be merged into $\beta$ so that the temperature $T$ is in units of $\frac{k_B}{\beta}$.
+
+\paragraph{KT phase transition}
+Unlike the Ising model, the XY model does not have a 2nd order phase transition.

@@ -1,7 +1,7 @@
-\documentclass[a4paper,11pt,german,titlepage,listof=totoc,bibliography=totoc,parskip=half]{scrarticle}
+\documentclass[a4paper,11pt,titlepage,listof=totoc,bibliography=totoc,parskip=half]{scrarticle}
 
 % recommended defaults
-\usepackage[ngerman]{babel}%
+\usepackage{babel}%
 \usepackage[utf8]{inputenc}%
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
@@ -28,24 +28,31 @@
 
 \newcommand*{\carry}[1][1]{\overset{#1}}
 \newcolumntype{B}[1]{r*{#1}{@{\,}r}}
-\AddToHook{cmd/section/before}{\clearpage}
+%\AddToHook{cmd/section/before}{\clearpage}
 \graphicspath{ {../figures/} }
 
 \title{The KT phase transition and the XY model}
-\subtitle{physics760 - Computation physics}
+\subtitle{physics760 - Computational physics}
 \author{Lennart Voorgang}
 \date{\today}
 
 \begin{document}
 	\maketitle
 	
+	\pagenumbering{Roman}
 	\tableofcontents
     \clearpage
  
-	\include{sections/introduction}
-	\include{sections/numerical_methods}
-	\include{sections/results}
+ 	\pagenumbering{arabic} 
+	\input{sections/introduction}
+	\input{sections/numerical_methods}
+	\input{sections/results}
+	\input{sections/conclusion}
 	
-	\section{Conclusion}
+     \clearpage
+	\pagenumbering{Roman}
+	\listoffigures
+    \clearpage
+	\listoftables
 	
 \end{document}

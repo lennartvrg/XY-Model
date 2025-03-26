@@ -1,14 +1,34 @@
 \section{Results}
+The following results were obtained for a run on the JUSUF cluster with $2$ nodes and $4$ tasks per node. The simulation ran for $N = \num{1 200 000}$ sweeps and the bootstrap parameter were $A = N$ and $B = \num{200 000}$.
+
 \subsection{Energy per Spin}
-\begin{figure}[H]
+As the total energy of the system as defined in~\cref{eq:hamiltonian} scales with the number of lattice sites, it is often more insightful to observe the energy per spin
+\begin{equation}\label{eq:energy_per_spin}
+	E = - \frac{\beta}{L^2} \sum_{\langle i,j \rangle}{\cos{(\Delta \theta)}}
+\end{equation}
+which has been plotted in~\cref{fig:energy_per_spin}.
+
+For low temperatures we have a quasi-ordered state where the spins mostly align. Just like in the Ising model the energy per spin is $-2.0$ when extrapolating to $T=0$. With increasing temperature the energy slowly vanishes until it asymptotically aproaches $0$ for big $T$.
+\begin{figure}[hbt!]
 	\centering
 	\includegraphics[width=0.8\textwidth]{Energy.pdf}
+	\caption[Temperature dependence of the energy per spin $E$]{Plot of the temperature dependence of the energy per spin $E$ (\cref{eq:energy_per_spin}) for lattice sizes $L\in\{32, 48, \dots, 272\}$. For small $T$ the energy tends to $\num{-2}$ while for big temperatures the energy asymptotically aproaches $\num{0}$.}
+	\label{fig:energy_per_spin}
 \end{figure}
 
 \subsection{Magnetization per Spin}
-\begin{figure}[H]
+The absolute total magnetization per spin for the system is given by
+\begin{equation}\label{eq:magnetzation_per_spin}
+	{\lvert M \rvert}^2 = \frac{1}{L^2} \left( \left( \sum{\cos{\theta_i}} \right)^2 + \left( \sum{\sin{\theta_i}} \right) \right)
+\end{equation}
+and has been plotted in~\cref{fig:magnetization_per_spin}.
+
+For low temperature the magnetzation tends to $\num{1}$ which confirms the existance of a quasi-ordered low temperature state. With increasing temperature the 
+\begin{figure}[hbt!]
 	\centering
 	\includegraphics[width=0.8\textwidth]{Magnetization.pdf}
+	\caption[Temperature dependence of the magnetzation per spin $E$]{Plot of the temperature dependence of the magnetization per spin ${\lvert M \rvert}^2$ (\cref{eq:magnetzation_per_spin}) for lattice sizes $L\in\{32, 48, \dots, 272\}$}
+	\label{fig:magnetization_per_spin}
 \end{figure}
 
 \subsection{Specific Heat per Spin}
@@ -30,3 +50,10 @@
 \end{figure}
 
 \subsection{Vortices}
+
+\subsection{Performance}
+\subsubsection{Scheduling}
+
+\subsubsection{Test}
+
+\subsubsection{Critical slowing down}
