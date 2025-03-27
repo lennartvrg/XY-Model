@@ -1,5 +1,37 @@
 \section{Source Code}\label{app:source_code}
-Test
+The program requires a modern \emph{rust} compiler such as stable version 1.85.0 or newer. This is the version present on the development machine which will work. The source code is hosted on GitHub and may be obtained here:
+\begin{center}
+	\url{https://github.com/lennartvrg/XY-Model}
+\end{center}
+To compile the executable one can run from the root of the repository
+\begin{minted}{bash}
+	cargo build --release
+\end{minted}
+which should place the \textit{XY-Model} executable in the \textit{./target/release}. To now run simulations for a 2D lattice with lattice sizes $L\in\{32, 48, 64\}$ one may use
+\begin{minted}{bash}
+	./target/release/XY-Model --run_id 1 --two 32 48 64
+\end{minted}
+where \textit{{run\_id}} is an identifier used to group program executions. One could for example run the simulation in separate invocations
+\begin{minted}{bash}
+	./target/release/XY-Model --run_id 1 --two 32
+	./target/release/XY-Model --run_id 1 --two 48
+	./target/release/XY-Model --run_id 1 --two 64
+\end{minted}
+and due to the \textit{{run\_id}} they would be grouped together. The Jupyter Notebook in the root of the repository is used to generate all figures. It requires the packages \textit{numpy, matplotlib, scipy, pandas, scienceplots}. The default behaviour is that the Notebook queries the \emph{SQLite} database for the biggest \textit{{run\_id}} and then generate the plots for the lattice sizes associated with that \textit{{run\_id}}.
+
+To generate the $64\times64$ lattice configurations needed for the vortex animation in~\cref{sec:vortex_unbinding} the following command is used
+\begin{minted}{bash}
+	./target/release/XY-Model --run_id 1 --vortices 64
+\end{minted}
+This command is not intended to be run on a cluster and should only be executed on the development machine.
+
+\section{SQLite Schema}\label{app:schema}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{Schema.png}
+	\caption{Database schema of the SQLite database used to store the simulation results and coordinate the distributed computational effort (\cref{sec:distributed_computing}).}
+	\label{fig:schema}
+\end{figure}
 
 \section{Vortex Unbinding}\label{app:vortex_unbinding}
 \begin{figure}[H]
@@ -7,7 +39,7 @@ Test
 	\begin{subfigure}[h]{0.45\textwidth}
 		\centering
 		\includegraphics[width=\textwidth]{frames/output_001.png}
-		\caption{At $T=\num{1.5}$ we are in the high temperature state were there are now vortex pairs and the spins are unordered.}
+		\caption{At $T=\num{1.5}$, we are in the high-temperature state where there are vortex pairs and the spins are unordered.}
 	\end{subfigure}
 	~
 	\begin{subfigure}[h]{0.45\textwidth}
@@ -24,8 +56,8 @@ Test
 	\begin{subfigure}[h]{0.45\textwidth}
 		\centering
 		\includegraphics[width=\textwidth]{frames/output_160.png}
-		\caption{After the second vortex / anti-vortex pair has annihilated we are left with an metastable lattice with ordered spins.}
+		\caption{After the second vortex / anti-vortex pair has annihilated we are left with a quasi-stable lattice with ordered spins.}
 	\end{subfigure}
-	\caption[Vortex unbiding of vortex / antivortex pairs at low temperatures.]{Simulating the process of vortex unbinding by bringing a thermalized high temperature unordered lattice slowly to low temperatures as described in~\cref{sec:vortex_unbinding}. Below the critical temperature $T_C$ bound vortex / anti-vortex pairs appear and slowly annihilate at very low temperatures. The lattice is left in a quasi-ordered low temperature state.}
+	\caption[Vortex unbiding of vortex / antivortex pairs at low temperatures.]{Simulating the process of vortex unbinding by bringing a thermalized high-temperature unordered lattice slowly to low temperatures as described in~\cref{sec:vortex_unbinding}. Below the critical temperature $T_C$ bound vortex / anti-vortex pairs appear and slowly annihilate at very low temperatures. The lattice is left in a quasi-ordered low-temperature state.}
 	\label{fig:vortex_unbinding}
 \end{figure}
