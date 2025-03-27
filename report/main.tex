@@ -19,9 +19,9 @@
 \usepackage{cleveref}
 \usepackage{microtype}
 \usepackage{booktabs}
-\usepackage{csquotes}
 \usepackage{graphicx}
-\usepackage[]{float}
+ \usepackage[style=english]{csquotes}
+\usepackage{float}
 \usepackage[section]{placeins}
 \usepackage{derivative}
 
@@ -53,8 +53,13 @@
 	\input{sections/results}
 	\input{sections/conclusion}
 	
-     \clearpage
+		
+	\clearpage
 	\pagenumbering{Roman}
+	
+	\appendix
+	\input{sections/appendix}
+
 	\listoffigures
     \clearpage
 	\bibliography{refs}

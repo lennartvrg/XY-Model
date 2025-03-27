@@ -1,14 +1,15 @@
 \section{Results}
 The following results were obtained for a run on the \emph{JUSUF}\footnote{\url{https://www.fz-juelich.de/en/ias/jsc/systems/supercomputers/jusuf}} cluster with $2$ nodes and $4$ tasks per node. The simulation ran for $N = \num{1 200 000}$ sweeps on lattice sizes $L\in\{32, 48, \dots, 272\}$ and the bootstrap parameters were $A = N$ and $B = \num{200 000}$.
 
-\subsection{Energy per Spin}
+\subsection{Observables}\label{sec:observables}
+\subsubsection{Energy per Spin}\label{sec:energy_per_spin}
 As the total energy of the system as defined in~\cref{eq:hamiltonian} scales with the number of lattice sites, it is often more insightful to observe the energy per spin
 \begin{equation}\label{eq:energy_per_spin}
 	E = - \frac{1}{L^2} \sum_{\langle i,j \rangle}{\cos{(\Delta \theta)}}
 \end{equation}
 which has been plotted in~\cref{fig:energy_per_spin}.
 
-For low temperatures we have a quasi-ordered state where the spins mostly align. Just like in the Ising model the energy per spin is $-2.0$ when extrapolating to $T=0$. With increasing temperature the energy slowly vanishes until it asymptotically aproaches $0$ for big $T$.
+For low temperatures we have a quasi-ordered state where the spins mostly align. Just like in the Ising model the energy per spin is $-2.0$ when extrapolating to $T=0$. With increasing temperature the energy slowly vanishes until it asymptotically approaches $0$ for big $T$.
 \begin{figure}[ht]
 	\centering
 	\includegraphics[width=0.8\textwidth]{Energy.pdf}
@@ -16,7 +17,7 @@ For low temperatures we have a quasi-ordered state where the spins mostly align.
 	\label{fig:energy_per_spin}
 \end{figure}
 
-\subsection{Magnetization per Spin}
+\subsubsection{Magnetization per Spin}\label{sec:magnetization_per_spin}
 The absolute total magnetization per spin for the system is given by
 \begin{equation}\label{eq:magnetzation_per_spin}
 	{\lvert M \rvert}^2 = \frac{1}{L^2} \left( \left( \sum{\cos{\theta_i}} \right)^2 + \left( \sum{\sin{\theta_i}} \right)^2 \right)
@@ -31,7 +32,7 @@ For low temperature the magnetzation tends to $\num{1}$ which confirms the exist
 	\label{fig:magnetization_per_spin}
 \end{figure}
 
-\subsection{Specific Heat per Spin}\label{sec:specific_heat_per_spin}
+\subsubsection{Specific Heat per Spin}\label{sec:specific_heat_per_spin}
 The specific heat of the system can be found by evaluating
 \begin{equation}\label{eq:specific_heat_per_spin}
 	C_V = \frac{\langle E^2 \rangle - {\langle E \rangle}^2}{T^2}
@@ -46,29 +47,29 @@ The specific heat is small for low temperatures and even smaller for big tempera
 	\label{fig:specific_heat}
 \end{figure}
 
-\subsection{Magnetic Susceptibility per Spin}\label{sec:magnetic_susceptibility_per_spin}
+\subsubsection{Magnetic Susceptibility per Spin}\label{sec:magnetic_susceptibility_per_spin}
 The mangetic susceptibility of the system can be found by evaluating
 \begin{equation}\label{eq:magnetic_susceptibility_per_spin}
 	\chi = \frac{\langle M^2 \rangle - {\langle M \rangle}^2}{T}
 \end{equation}
 and has bee plotted logarithmically in~\cref{fig:magnetic_susceptibility}.
 
-The magnetic susceptibility is small for low and high temperatures. There exists a peak near the critical temperature which slowly moves left for increasing lattice sizes while the magnitude of the peak slowly shrinks.
+The magnetic susceptibility is small for low and high temperatures. There exists a peak near the critical temperature which slowly moves left and becomes narrower for increasing lattice sizes while the magnitude of the peak slowly shrinks.
 \begin{figure}[!htb]
 	\centering
 	\includegraphics[width=0.8\textwidth]{Magnetic_Susceptibility.pdf}
-	\caption[Temperature dependence of the mangetic susceptibility per spin $\chi$]{}
+	\caption[Temperature dependence of the mangetic susceptibility per spin $\chi$]{Plot of the temperature dependence of the magnetic susceptibility per spin $\chi$ (\cref{eq:magnetic_susceptibility_per_spin}) for lattice sizes $L\in\{32, 48, \dots, 272\}$. For low and high temperatures the magnetic susceptibility tends towards $0$. Near the critical temperature there is a peak which moves left and gets narrower for increasing lattice sizes.}
 	\label{fig:magnetic_susceptibility}
 \end{figure}
 
 \subsection{Critical Temperature \texorpdfstring{$T_C$}{T}}\label{sec:critical_temperature}
-\begin{figure}[H]
+\begin{figure}
 	\centering
 	\includegraphics[width=0.8\textwidth]{Critical_Temperature.pdf}
-	\caption[Obtaining the critical temperature $\texorpdfstring{T_C}{T}$ by plotting the temperature $\texorpdfstring{T}{T}$ at $\texorpdfstring{\chi_\text{max}}{the magnetic susceptibility is maximum}$ against $\texorpdfstring{(\ln{L})^{-2}}{inverse logarithmic squared lattice size}$]{}
+	\caption[Obtaining the critical temperature $\texorpdfstring{T_C}{T}$ by plotting the temperature $\texorpdfstring{T}{T}$ at $\texorpdfstring{\chi_\text{max}}{the magnetic susceptibility is maximum}$ against $\texorpdfstring{(\ln{L})^{-2}}{inverse logarithmic squared lattice size}$]{Plotting the temperature from~\cref{sec:magnetic_susceptibility_per_spin} at which $\chi$ is maximal against $\ln{L})^{-2}$ yields a linear correlation. The data was fitted using linear regression model using a least square approach. The uncertainties were estimated using a bootstrap approach. On the right the distribution of intercepts from the bootstrap resampling is plotted.}
 	\label{fig:critical_temperature}
 \end{figure}
-To find the critical temperature where the the KT phase transition takes place one can use the magnetic susceptibility from~\cref{sec:magnetic_susceptibility_per_spin}. As shown by~\citet{shifted} there exists a shifted temperature $T^*$ which asymptotically approaches the critical temperature $T_C$ for increasing lattice sizes
+To find the critical temperature where the the KT phase transition takes place one can use the magnetic susceptibility from~\cref{sec:magnetic_susceptibility_per_spin}. As shown by~\citet{shifted} there exists a shifted temperature $T^*$ which asymptotically approaches the critical temperature $T_C$ for an infinite lattice
 \begin{equation}\label{eq:shifted_temperature}
 	T^*(L) \approx T_C + \frac{\pi^2}{4c (\ln{L})^2}
 \end{equation}
@@ -86,11 +87,32 @@ We can now compare our results with some literature values
 \end{itemize}
 As these estimates lie within the confidence interval of our simulation we may conclude that our simulation was a success. It is of note that our uncertainty is much larger than those of others as we were more constrained by our computational resources and time available.
 
-\subsection{Vortices}
+\subsection{Vortex Unbinding}\label{sec:vortex_unbinding}
+The visualize the vortex unbinding at low temperature we did a singular run were we first heated up a $64 \times 64$ lattice  to $T = \num{1.5}$ and let it thermalize there for $\num{100 000}$ sweeps. The temperature was then lowered back down to $T = \num{0.05}$ in $90$ steps with $20$ sweeps of thermalization at each temperature. At $T = \num{0.05}$ the system was given $\num{90 000}$ sweeps to let the vortices unbind. An animation of that procedure may be viewed here\footnote{\url{https://www.youtube.com/watch?v=Gi8mL_0HFxs}} while some of the key frames are shown in~\cref{fig:vortex_unbinding} of~\cref{app:vortex_unbinding}.
+
+Below the critical temperature $T_C$ bound vortex / anti-vortex pairs appear. Is the temperature further lowered the pairs come closer together until they annihilate. The lattice is left in an quasi-ordered low temperature state.
 
 \subsection{Performance}
-\subsubsection{Schedueling}
+\subsubsection{Scheduling}
+Test
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\textwidth]{Schedueling.pdf}
+	\caption{Scheduling}
+\end{figure}
 
-\subsubsection{Test}
+\subsubsection{Lattice Scaling}
+Test
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\textwidth]{Time_Scaling.pdf}
+	\caption{Time scaling}
+\end{figure}
 
 \subsubsection{Critical slowing down}
+Test
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\textwidth]{Critical_Slowing_Down.pdf}
+	\caption{Critical slowing down}
+\end{figure}

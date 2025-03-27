@@ -1,8 +1,10 @@
 \section{Conclusion}
-In this work we were able to simulate the $2$D XY model using a numerical Monte Carlo approach. For this we used the Metropolis-Hastings algorithm (\cref{sec:metropolis_hastings}), bootstrapping (\cref{sec:bootstrap}) and distributed computing techniques. The simulation ran on the \emph{JSUSUF} cluster at \emph{FZ Jülich} and helped us study the observables $E$, ${\lvert M \rvert}^2$, $C_V$ and $\chi$.
+In this work we were able to simulate the $2$D XY model using a numerical Monte Carlo approach. For this we used the Metropolis-Hastings algorithm (\cref{sec:metropolis_hastings}), bootstrapping (\cref{sec:bootstrap}) and distributed computing techniques (\cref{sec:distributed_computing}). The simulation ran on the \emph{JUSUF} cluster at \emph{FZ Jülich} and helped us study the observables (\cref{sec:observables}) energy $E$, magnetization ${\lvert M \rvert}^2$, specific heat $C_V$ and magnetic susceptibility $\chi$.
 
-In~\cref{sec:critical_temperature} we used the shifted temperature  in~\cref{eq:shifted_temperature} to get an estimate for the critical temperature
+In~\cref{sec:critical_temperature} we used the shifted temperature  from~\cref{eq:shifted_temperature} to get an estimate for the critical temperature
 \begin{equation}
 	T_C = \num{0.8941(57)}.
 \end{equation}
 The uncertainty is the $\SI{95}{\percent}$ confidence band obtained from bootrapping the intercept of our linear regression model using a least square algorithm. As discussed in~\cref{sec:critical_temperature} our estimate is compatible with existing literature.
+
+In~\cref{sec:vortex_unbinding} we observed the existence of bound vortex / anti-vortex pairs below the critical temperature. Further the pair annihilation over long timescales of said vortex pairs was obsereved.

@@ -1,6 +1,12 @@
 \section{Numerical Methods}
-\subsection{Monte Carlo Metropolis-Hastings Algorithm}\label{sec:metropolis_hastings}
+To get an estimate for the critical temperature and make the vortex pairs visible, we will be using numeric Monte Carlo simulations running on a cluster of CPU nodes. \emph{Rust}\footnote{\url{https://www.rust-lang.org/}} was chosen as a fitting programming language for this project, as we want to parallize the computational effort and the \emph{rust} ownership model makes thread-safe access to data easy.
 
+\subsection{Monte Carlo Metropolis-Hastings Algorithm}\label{sec:metropolis_hastings}
+The fundamental problem we need to solve is that we want to generate configurations of our system with propability $P(\sigma) = \exp{(-\beta H[\sigma])}/Z$. The problem here is that the partition sum $Z$ is not easy to calculate. As shown by~\citet{metropolis}, it is sufficient to calculate the ratio of probabilities
+\begin{equation}
+	\frac{P(y)}{P(x)} = \exp{(-\beta(H[y] - H[x]))} = \exp{(-\beta \Delta H)}.
+\end{equation}
+This generates a Markov chain of dependent configurations. The overall procedure for the lattice is as follows
 \begin{enumerate}
 	\item Calculate $E$ and $M$ for the initial lattice configuration.
 	\item Perform a lattice sweep by iterating over all lattice sites. For every site $i$ do:
@@ -13,7 +19,54 @@
 	\item Repeat from 2. for a total of $N$ sweeps.
 \end{enumerate}
 
-\subsection{Bootstrap Analysis}\label{sec:bootstrap}
-Since the Metropolis-Hastings algorithm scales with the number of lattices sites, it is computationally impractical to run the Metropolis-Hastings algorithm for very long times. To resolve this, one might use bootstrap sampling to obtain more measurements than were simulated. 
+\subsection{Autocorrelation}
+The configurations obtained from the aforementioned procedure are each dependent on the configurations preceeding them.  To get a measure for that correlation one can introduce the autocorrelation
+\begin{equation}
+	C(\Delta t) = \langle(O(t) - \mu_O)(O(t + \Delta t) - \mu_O) \rangle
+\end{equation}
+and, to get a size independent measure, the normalized autocorrelation
+\begin{equation}
+	\Gamma(\Delta t) = \frac{C(\Delta t)}{C(0)}
+\end{equation}
+with $\Delta t$ being the step between samples, $O$ an observable and $\mu_O$ the mean of that observable. This measure decays exponentially with the timescale $\tau$ being the point where samples are no longer correlated
+\begin{equation}
+	\tau = \frac{1}{2} + \sum^{T}_{t=1}{\Gamma(t)}
+\end{equation}
+where we cut off the summation when it first crosses zero.
 
-\subsection{Implementation}
+\subsection{Thermalization and Blocking}\label{sec:blocking}
+To now get iid samples we discard the first $\lceil 3\tau \rceil$ values in a thermalization step. We then do a blocking step where we put the remaining samples into chunks of size $\lceil \tau \rceil$ and calculate the mean over each of those chunks. All further processing will use these blocked samples which are now iid.
+
+\subsection{Bootstrap Analysis}\label{sec:bootstrap}
+Since the Metropolis-Hastings algorithm scales with the number of lattices sites, it is computationally impractical to run the Metropolis-Hastings algorithm for long timescales. Given that we have an observable whose iid samples follow an gaussian distribution and we already have \enquote{enough} iid samples which cover enough of the possible configuration space, we can then use bootstrapping to generate more samples.
+\begin{enumerate}
+	\item Collect $B$ intermediate means by repeating the following:
+	\begin{enumerate}
+		\item Take $A$ random samples from the blocked samples obtained in~\cref{sec:blocking} with replacement.
+		\item Calculate the mean of those samples and add the result to the set of intermediate means.
+	\end{enumerate}
+	\item Calculate the final mean and the sample standard deviation of those $B$ intermediate means.
+\end{enumerate}
+
+\subsection{Temperature Scanning}\label{sec:temperature_scanning}
+The expectation is that there is an interesting area near the critical temperature and a more boring area far from it. Using the following procedure we can zoom into the interesting area of the magnetic susceptibilty.
+\begin{enumerate}
+	\item Divide the temperature interval $T \in (0.0, 3.0]$ into $64$ steps with step size $\Delta T$.
+	\item Run the Metropolis-Hastings algorithm on those $64$ discrete temperatures on one thread per value. Increment the iteration count and exit if needed.
+	\item Find the temperature $T$ where the magnetic susceptibility is maximal.
+	\item Divide the new temperature interval $T \in (T_\text{max} - 3\Delta T, T_\text{max} + 3\Delta T]$ into $64$ steps with step size $\Delta T$ and go to 2.
+\end{enumerate}
+
+
+\subsection{Distributed Computing}\label{sec:distributed_computing}
+The temperature scanning described in~\cref{sec:temperature_scanning} already allows us to distribute the simulation accross $64$ threads on a single node. As we have access to the \emph{FZ Jülich} \emph{SLURM} cluster for this project, it is natural to try to distribute the computational effort accross multiple nodes.
+
+All nodes have access to a fast shared network volume which can be used for synchronization between nodes. We chose to use a \emph{SQLite} database for storing our results on disk. Since \emph{SQLite} is ACID compliant it is also safe to access over a network share. The procedure now is as follows:
+\begin{enumerate}
+	\item When invoking the executable the user can specify which lattice sizes should be simulated. This happens for every process for the \emph{SLURM} batch job.
+	\item Every process tries to register these lattice sizes in a table. The insertion process is handled that only the first insertion happens and the rest are ignored.
+	\item During the simulation stage every instance can query the database for a lattice size (in descending order) which is not yet handled by another instance. The ACID compliance of the database can ensure that this step is atomic.
+	\item The instance simulates the lattice size and writes the results back into the results table.
+\end{enumerate}
+As an additional integrity measure unique constraints on the tables ensure that every lattice size and temperature combination is not handled twice.
+
