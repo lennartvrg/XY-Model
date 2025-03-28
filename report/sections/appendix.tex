@@ -1,5 +1,5 @@
 \section{Source Code}\label{app:source_code}
-The program requires a modern \emph{rust} compiler such as stable version 1.85.0 or newer. This is the version present on the development machine which will work. The source code is hosted on GitHub and may be obtained here:
+The program requires a modern \emph{Rust} compiler such as stable version 1.85.0 or newer. This is the version present on the development machine which will work. The source code is hosted on GitHub and may be obtained here:
 \begin{center}
 	\url{https://github.com/lennartvrg/XY-Model}
 \end{center}
@@ -33,13 +33,47 @@ This command is not intended to be run on a cluster and should only be executed 
 	\label{fig:schema}
 \end{figure}
 
+\section{Energy Close Up}\label{app:energy:close_up}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{Energy_CloseUp.pdf}
+	\caption[Close up of the temperature dependence of the energy per spin $E$]{Plot of the temperature dependence of the energy per spin $E$ (\cref{eq:energy_per_spin}) for lattice sizes $L\in\{32, 48, \dots, 272\}$ and $t\in [\num{0.9}, \num{1.2}]$. Finite size effects are observable as the curve shifts slightly left for increasing lattice sizes.}
+	\label{fig:energy_per_spin_close_up}
+\end{figure}
+
+\section{Residuals}\label{app:residuals}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{Energy_Residuals.pdf}
+	\caption[Residuals of the energy per spin $E$]{Residuals of energy per spin $E$ for lattice sizes $L\in\{32, 48, \dots, 272\}$ (\cref{sec:energy_per_spin}). Uncertainties get smaller for increasing lattice sizes, are small for the low-temperature state and big for the high-temperature state.}
+	\label{fig:energy_per_spin_residuals}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{Magnetization_Residuals.pdf}
+	\caption[Residuals of the magnetization per spin ${\lvert M \rvert}^2$]{Residuals of magnetization per spin ${\lvert M \rvert}^2$ for lattice sizes $L\in\{32, 48, \dots, 272\}$ (\cref{sec:magnetization_per_spin}). Uncertainties get smaller for increasing lattice sizes, are small for the low-temperature and high-temperature state. Near the critical temperature the uncertainty has a peak.}
+	\label{fig:magnetization_per_spin_residuals}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{Specific_heat_Residuals.pdf}
+	\caption[Residuals of the specific heat per spin $C_V$]{Residuals of the specific heat per spin $C_V$ for lattice sizes $L\in\{32, 48, \dots, 272\}$ (\cref{sec:specific_heat_per_spin}). Uncertainties get smaller for increasing lattice sizes, are big for the low-temperature state and get small for the high-temperature state.}
+	\label{fig:specific_heat_per_spin_residuals}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\textwidth]{Magnetic_Susceptibility_Residuals.pdf}
+	\caption[Residuals of the magnetic susceptibility per spin $C_V$]{Residuals of magnetic susceptibility heat per spin $\chi$ for lattice sizes $L\in\{32, 48, \dots, 272\}$ (\cref{sec:magnetic_susceptibility_per_spin}). Uncertainties get smaller for increasing lattice sizes, are small for the low-temperature and high-temperature state. Near the critical temperature the uncertainty has a peak.}
+	\label{fig:magnetic_susceptibility_per_spin_residuals}
+\end{figure}
+
 \section{Vortex Unbinding}\label{app:vortex_unbinding}
 \begin{figure}[H]
 	\centering
 	\begin{subfigure}[h]{0.45\textwidth}
 		\centering
 		\includegraphics[width=\textwidth]{frames/output_001.png}
-		\caption{At $T=\num{1.5}$, we are in the high-temperature state where there are vortex pairs and the spins are unordered.}
+		\caption{At $T=\num{1.5}$, we are in the high-temperature state where there are unbound vortices and the spins are unordered.}
 	\end{subfigure}
 	~
 	\begin{subfigure}[h]{0.45\textwidth}
@@ -58,6 +92,6 @@ This command is not intended to be run on a cluster and should only be executed 
 		\includegraphics[width=\textwidth]{frames/output_160.png}
 		\caption{After the second vortex / anti-vortex pair has annihilated we are left with a quasi-stable lattice with ordered spins.}
 	\end{subfigure}
-	\caption[Vortex unbiding of vortex / antivortex pairs at low temperatures.]{Simulating the process of vortex unbinding by bringing a thermalized high-temperature unordered lattice slowly to low temperatures as described in~\cref{sec:vortex_unbinding}. Below the critical temperature $T_C$ bound vortex / anti-vortex pairs appear and slowly annihilate at very low temperatures. The lattice is left in a quasi-ordered low-temperature state.}
+	\caption[Vortex unbinding of vortex/antivortex pairs at low temperatures]{Simulating the process of vortex unbinding by bringing a thermalized high-temperature unordered lattice slowly to low temperatures as described in~\cref{sec:vortex_unbinding}. Below the critical temperature $T_C$ bound vortex/anti-vortex pairs appear and slowly annihilate at very low temperatures. The lattice is left in a quasi-ordered low-temperature state.}
 	\label{fig:vortex_unbinding}
 \end{figure}

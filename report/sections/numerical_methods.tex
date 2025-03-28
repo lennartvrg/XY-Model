@@ -1,8 +1,8 @@
 \section{Numerical Methods}
-To get an estimate for the critical temperature and make the vortex pairs visible for the 2D lattice with periodic boundary conditions (topologically a Torus), we will use numeric Monte Carlo simulations running on a cluster of CPU nodes. \emph{Rust}\footnote{\url{https://www.rust-lang.org/}} was chosen as a fitting programming language for this project, as we want to parallelize the computational effort and the \emph{rust} ownership model makes thread-safe access to data manageable. Detailed instructions on how to obtain and use the source code are found in~\cref{app:source_code}.
+To get an estimate for the critical temperature and make the vortex pairs visible for the 2D lattice with periodic boundary conditions (topologically a Torus), we will use numeric Monte Carlo simulations running on a cluster of CPU nodes. \emph{Rust}\footnote{\url{https://www.rust-lang.org/}} was chosen as a fitting programming language for this project, as we want to parallelize the computational effort and the \emph{Rust} ownership model makes thread-safe access to data manageable. Detailed instructions on how to obtain and use the source code are found in~\cref{app:source_code}.
 
 \subsection{Monte Carlo Metropolis-Hastings Algorithm}\label{sec:metropolis_hastings}
-The fundamental problem we need to solve is that we want to generate configurations of our system with probability $P(\sigma) = \exp{(-\beta H[\sigma])}/Z$. The problem is that the partition sum $Z$ is not easy to calculate. As shown by~\citet{metropolis}, it is sufficient to calculate the ratio of probabilities
+The fundamental problem we need to solve is that we want to generate configurations of our system with probability $P(\sigma) = \exp{(-\beta H[\sigma])}/Z$. The problem is that the partition sum $Z$ is not easy to calculate. As shown by~\citet{metropolis}, it is sufficient to calculate the ratio of probabilities instead
 \begin{equation}
 	\frac{P(y)}{P(x)} = \exp{(-\beta(H[y] - H[x]))} = \exp{(-\beta \Delta H)}.
 \end{equation}
@@ -13,7 +13,7 @@ This generates a Markov chain of dependent configurations. The overall procedure
 	\begin{enumerate}
 		\item Propose a new angle $\theta_i \in [0,2\pi)$ from a uniform distribution.
 		\item Calculate $\Delta H = \Delta E$ and $\Delta M$ for the proposed new state.
-		\item Accept or reject state with probability $P = \min{(1, \exp{(-\beta\Delta H)})}$
+		\item Accept or reject state with probability $P = \min{(1, \exp{(-\beta\Delta H)})}$.
 	\end{enumerate}
 	\item Update the observables $E \mathrel{{+}{=}} \Delta E$ and $M \mathrel{{+}{=}} \Delta M$ and add them to the result set.
 	\item Repeat from 2. for a total of $N$ sweeps.
@@ -21,25 +21,25 @@ This generates a Markov chain of dependent configurations. The overall procedure
 The implementation is so that there is a \textit{Lattice} trait and the Metropolis-Hastings algorithm is implemented for all structs implementing that trait.
 
 \subsection{Autocorrelation}
-The configurations obtained from the that procedure are dependent on the configurations preceding them.  To get a measure for that correlation one can introduce the autocorrelation
+The configurations obtained from that procedure are dependent on the configurations preceding them.  To get a measure for that correlation one can introduce the autocorrelation
 \begin{equation}
 	C(\Delta t) = \langle(O(t) - \mu_O)(O(t + \Delta t) - \mu_O) \rangle
 \end{equation}
-and, to get a size invariant measure, the normalized autocorrelation
+(\citet[eq. (41)]{bootstrap}) and, to get a size invariant measure, the normalized autocorrelation
 \begin{equation}
 	\Gamma(\Delta t) = \frac{C(\Delta t)}{C(0)}
 \end{equation}
-with $\Delta t$ being the step between samples, $O$ an observable and $\mu_O$ the mean of that observable. This measure decays exponentially with the timescale $\tau$ being the point where samples are no longer correlated
+(\citet[eq. (43)]{bootstrap}) with $\Delta t$ being the step between samples, $O$ an observable and $\mu_O$ the mean of that observable. This measure decays exponentially with the timescale $\tau$ being the point where samples are no longer correlated
 \begin{equation}
 	\tau = \frac{1}{2} + \sum^{T}_{t=1}{\Gamma(t)}
 \end{equation}
-where we cut off the summation when it first crosses zero.
+(\citet[eq. (46)]{bootstrap}) where we cut off the summation when it first crosses zero. In the implementation, we use a Discrete Fourier Transform to accelerate this step.
 
 \subsection{Thermalization and Blocking}\label{sec:blocking}
 To get iid samples we discard the first $\lceil 3\tau \rceil$ values in a thermalization step. We then do a blocking step where we put the remaining samples into chunks of size $\lceil \tau \rceil$ and calculate the mean over each chunk. All further processing will use these blocked samples which are now iid.
 
 \subsection{Bootstrap Analysis}\label{sec:bootstrap}
-Since the Metropolis-Hastings algorithm scales with the number of lattice sites, it is computationally impractical to run the Metropolis-Hastings algorithm for long timescales. Given that we have an observable whose iid samples follow a Gaussian distribution and we already have \enquote{enough} iid samples which cover enough of the possible configuration space, we can then use bootstrapping to generate more samples.
+Since the Metropolis-Hastings algorithm scales with the number of lattice sites, it is computationally impractical to run the Metropolis-Hastings algorithm for long timescales. Given that we have an observable whose iid samples follow a Gaussian distribution and we already have \enquote{enough} iid samples which cover enough of the possible configuration space, we can then use bootstrapping to generate more samples (\citet{bootstrap}).
 \begin{enumerate}
 	\item Collect $B$ intermediate means by repeating the following:
 	\begin{enumerate}
@@ -65,11 +65,11 @@ The expectation is that there is an interesting area near the critical temperatu
 \subsection{Distributed Computing}\label{sec:distributed_computing}
 The temperature scanning described in~\cref{sec:temperature_scanning} allows us to distribute the simulation across $64$ threads on a single node. As we have access to the \emph{FZ Jülich} \emph{SLURM} cluster for this project, it would be ideal to distribute the computational effort across multiple nodes.
 
-All nodes have access to a fast network share which can be used to distribute work between nodes. We chose to use a \emph{SQLite} database to store our results on disk as \emph{SQLite} is ACID compliant which makes it safe to access over a network share. The procedure now is as follows:
+All nodes have access to a fast network share which can be used to distribute work between nodes. We chose to use a \emph{SQLite}\footnote{\url{https://www.sqlite.org/}} database to store our results on disk as \emph{SQLite} is ACID compliant which makes it safe to access over a network share. The procedure now is as follows:
 \begin{enumerate}
 	\item When invoking the executable with \mintinline{bash}{srun} the user can specify which lattice sizes should be simulated.
 	\item Every process tries to insert these lattice sizes in the \textit{allocations} table. The insertion process ignores duplicates so that every lattice size is only added once.
-	\item During the simulation stage, every process can query the database for a lattice size (in descending order) that is not yet handled by another process. The ACID compliance of the database ensures that this step is atomic.
+	\item During the simulation stage, every process can query the database for a lattice size (in descending order) that is not yet handled by another process. The database's ACID compliance ensures that this step is atomic.
 	\item The \mintinline{bash}{srun} process simulates the lattice size and writes the result into the \textit{results} table.
 \end{enumerate}
 As an additional integrity measure unique constraints on the tables ensure that every lattice size and temperature combination is only inserted once. The complete database schema can be seen in~\cref{fig:schema} of~\cref{app:schema}.

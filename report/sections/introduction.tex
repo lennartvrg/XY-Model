@@ -8,15 +8,15 @@ One can now generalize the problem from a $\mathbb{Z}_2$ symmetry to a continuou
 		\cos{\theta_i} \\ \sin{\theta_i}
 	\end{pmatrix}
 \end{equation}
-parametrized by the angle $\theta_i \in [0,2\pi)$. The Hamiltonian for this system is thus
+parametrized by the angle $\theta_i \in [0,2\pi)$. Thus, the Hamiltonian for this system is
 \begin{equation}\label{eq:partition}
 	H = -J \sum_{\langle i,j \rangle}{s_i \cdot s_j} = -J \sum_{\langle i,j \rangle}{\cos{(\Delta \theta)}}
 \end{equation}
-\citet[p. 1190, eq. (42)]{kt} where $\Delta \theta = \theta_i - \theta_j$ is the angle between two spins and $J > 0$ is the interaction strength. The $\langle i,j \rangle$ notation is used to indicate a nearest neighbour approximation. The partition sum for such a system is given by
+(\citet[p. 1190, eq. (42)]{kt}) where $\Delta \theta = \theta_i - \theta_j$ is the angle between two spins and $J > 0$ is the interaction strength. The $\langle i,j \rangle$ notation is used to indicate a nearest neighbour approximation. The partition sum for such a system is given by
 \begin{equation}
 	Z = \sum{\exp{(-\beta H)}}
 \end{equation}
-where $\beta = (k_B T)^{-1}$ and $k_B$ is the Boltzmann constant.  For the remainder of the project, we set $J = \SI{1}{\joule}$ such that $\beta = T^{-1}$ is in units of $k_B^{-1}$.
+where $\beta = (k_B T)^{-1}$ and $k_B$ is the Boltzmann constant.  For the remainder of the project, we set $J = \SI{1}{\joule}$ such that $T = \beta^{-1}$ is in units of $\si{\J\per\kb}$.
 
 \paragraph{KT phase transition}
-Unlike the Ising model, the XY model does not have a 2nd order phase transition \textquote[{\citet[p. 1190]{kt}}]{as the ground state is unstable against low-energy spin-wave excitations}. It does however have something we call KT phase transition where below a critical temperature $T_C$ metastable states can exist. These metastable states \textquote[{\citet[p. 1190]{kt}}]{correspond to vortices which are closely bound in pairs} and which come closer together with decreasing temperature until they pair annihilate.
+Unlike the Ising model, the XY model does not have a 2nd order phase transition \textquote[{\citet[p. 1190]{kt}}]{as the ground state is unstable against low-energy spin-wave excitations}. It does however have something we call KT phase transition where below a critical temperature $T_C$ metastable states can exist. These metastable states \textquote[{\citet[p. 1190]{kt}}]{correspond to vortices which are closely bound in pairs} and which come closer together with decreasing temperature until they pair-annihilate.
